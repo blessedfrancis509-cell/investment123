@@ -140,6 +140,9 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
   const inputCls =
     'w-full bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#171717] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED] focus:bg-white transition-all';
 
+  const filterCls =
+    'h-8 bg-[#F8F7FC] border border-[#EDE9FE] rounded-lg px-2.5 text-[11px] font-bold text-[#171717] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED] focus:bg-white transition-all';
+
   return (
     <div className="space-y-3 animate-fade-in" id="p2p-page-view">
       {/* ============ HEADER ============ */}
@@ -390,25 +393,25 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
       {viewMode === 'marketplace' && (
         <div className="space-y-3">
           {/* Toolbar */}
-          <div className="bg-white border border-[#EDE9FE] rounded-[20px] p-3 sm:p-4 shadow-xs space-y-2.5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex bg-[#F8F7FC] p-0.5 rounded-lg border border-[#EDE9FE] w-full sm:w-auto">
-                <button
-                  onClick={() => setTradeType('BUY')}
-                  className={`flex-1 sm:flex-initial px-4 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${tradeType === 'BUY' ? 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white shadow-xs' : 'text-[#6B7280] hover:text-[#171717]'}`}
-                >
-                  Buy
-                </button>
-                <button
-                  onClick={() => setTradeType('SELL')}
-                  className={`flex-1 sm:flex-initial px-4 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${tradeType === 'SELL' ? 'bg-[#171717] text-white shadow-xs' : 'text-[#6B7280] hover:text-[#171717]'}`}
-                >
-                  Sell
-                </button>
-              </div>
+          <div className="bg-white border border-[#EDE9FE] rounded-[20px] px-3 sm:px-4 py-2.5 shadow-xs">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-2.5">
+              {/* Trade type + asset (left cluster) */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex bg-[#F8F7FC] p-0.5 rounded-lg border border-[#EDE9FE]">
+                  <button
+                    onClick={() => setTradeType('BUY')}
+                    className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${tradeType === 'BUY' ? 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white shadow-xs' : 'text-[#6B7280] hover:text-[#171717]'}`}
+                  >
+                    Buy
+                  </button>
+                  <button
+                    onClick={() => setTradeType('SELL')}
+                    className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${tradeType === 'SELL' ? 'bg-[#171717] text-white shadow-xs' : 'text-[#6B7280] hover:text-[#171717]'}`}
+                  >
+                    Sell
+                  </button>
+                </div>
 
-              {/* View mode + Asset */}
-              <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1 bg-[#F8F7FC] p-0.5 rounded-lg border border-[#EDE9FE]">
                   {ASSETS.map((asset) => (
                     <button
@@ -420,6 +423,7 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
                     </button>
                   ))}
                 </div>
+
                 <button
                   onClick={() => setViewMode('express')}
                   className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
@@ -428,42 +432,49 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
                   <span className="hidden sm:inline">Express</span>
                 </button>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 pt-2 border-t border-[#EDE9FE]">
-              <input
-                type="number"
-                value={amountQuery}
-                onChange={(e) => setAmountQuery(e.target.value)}
-                placeholder="Budget (e.g. 500)"
-                className={`${inputCls}`}
-              />
-              <select
-                value={selectedCurrency}
-                onChange={(e) => setSelectedCurrency(e.target.value)}
-                className={`${inputCls} cursor-pointer`}
-              >
-                {['USD', 'EUR', 'GBP', 'NGN', 'BRL'].map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className={`${inputCls} cursor-pointer`}
-              >
-                <option value="price">Sort: Best Price</option>
-                <option value="rate">Highest Completion</option>
-                <option value="orders">Most Orders</option>
-                <option value="speed">Fastest Release</option>
-              </select>
-              <button
-                onClick={() => setVerifiedOnly(!verifiedOnly)}
-                className={`${inputCls} flex items-center justify-center gap-1.5 cursor-pointer ${verifiedOnly ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : ''}`}
-              >
-                <BadgeCheck className={`w-3.5 h-3.5 ${verifiedOnly ? 'text-emerald-600' : 'text-slate-400'}`} />
-                {verifiedOnly ? 'Verified Pro Only' : 'Verified Only'}
-              </button>
+              {/* Inline filters (right cluster) */}
+              <div className="flex-1 flex flex-wrap items-center gap-2 lg:justify-end">
+                <label className="flex items-center gap-1.5 text-[11px] font-bold text-[#6B7280] shrink-0">
+                  {selectedCurrency}
+                  <select
+                    value={selectedCurrency}
+                    onChange={(e) => setSelectedCurrency(e.target.value)}
+                    className={`${filterCls} w-20 cursor-pointer`}
+                  >
+                    {['USD', 'EUR', 'GBP', 'NGN', 'BRL'].map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <input
+                  type="number"
+                  value={amountQuery}
+                  onChange={(e) => setAmountQuery(e.target.value)}
+                  placeholder="Amount"
+                  className={`${filterCls} w-24`}
+                />
+
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className={`${filterCls} w-36 cursor-pointer`}
+                >
+                  <option value="price">Sort: Best Price</option>
+                  <option value="rate">Highest Completion</option>
+                  <option value="orders">Most Orders</option>
+                  <option value="speed">Fastest Release</option>
+                </select>
+
+                <button
+                  onClick={() => setVerifiedOnly(!verifiedOnly)}
+                  className={`${filterCls} w-auto px-2.5 flex items-center justify-center gap-1 cursor-pointer ${verifiedOnly ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : ''}`}
+                >
+                  <BadgeCheck className={`w-3.5 h-3.5 ${verifiedOnly ? 'text-emerald-600' : 'text-slate-400'}`} />
+                  {verifiedOnly ? 'Verified' : 'All'}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -496,44 +507,53 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
             ) : (
               <>
                 {/* Mobile cards */}
-                <div className="md:hidden divide-y divide-[#EDE9FE]">
+                <div className="md:hidden divide-y divide-[#F4F0FA]">
                   {filteredOffers.map((offer) => {
                     const methods = getMethods(offer);
                     return (
-                      <div key={offer.id} className="p-3.5 space-y-2.5">
+                      <div key={offer.id} className="p-3.5 space-y-2">
+                        {/* Row 1: Price + available */}
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="relative shrink-0">
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#A855F7] text-white font-extrabold text-[10px] flex items-center justify-center">
-                                {offer.merchantName.substring(0, 2).toUpperCase()}
-                              </div>
-                              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white" />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs font-bold text-[#171717] truncate">{offer.merchantName}</span>
-                                <CheckCircle2 className="w-3 h-3 text-[#16A34A] shrink-0" />
-                                {offer.merchantTier && (
-                                  <span className="px-1 py-0.5 bg-purple-50 text-[#6D28D9] text-[8px] font-bold rounded border border-purple-100 shrink-0">{offer.merchantTier}</span>
-                                )}
-                              </div>
-                              <p className="text-[9px] text-[#6B7280]">
-                                <span className="text-emerald-700 font-bold">{offer.completionRate}%</span> · {(offer.completedOrders || offer.ordersCount || 100).toLocaleString()} orders · ⚡ {offer.responseTimeMinutes || 2}m
-                              </p>
-                            </div>
+                          <div className="flex flex-col">
+                            <span className={`text-lg font-black font-mono leading-none ${tradeType === 'BUY' ? 'text-[#16A34A]' : 'text-[#E11D48]'}`}>{offer.pricePerXena.toFixed(4)}</span>
+                            <span className="text-[10px] text-[#9CA3AF] font-semibold">{selectedCurrency}</span>
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="text-sm font-black text-[#171717] font-mono leading-none">${offer.pricePerXena.toFixed(2)}</p>
-                            <p className="text-[9px] text-[#6B7280]">{offer.availableXena.toLocaleString()} XENA</p>
+                            <p className="text-xs font-black text-[#171717] font-mono leading-tight">{offer.availableXena.toLocaleString()} {selectedAsset}</p>
+                            <p className="text-[10px] text-[#6B7280] leading-tight">{selectedCurrency} {offer.minLimit.toFixed(0)} – {offer.maxLimit.toLocaleString()}</p>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between gap-2">
+
+                        {/* Row 2: Merchant */}
+                        <div className="flex items-center gap-2">
+                          <div className="relative shrink-0">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#A855F7] text-white font-extrabold text-[10px] flex items-center justify-center">
+                              {offer.merchantName.substring(0, 2).toUpperCase()}
+                            </div>
+                            <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-bold text-[#171717] truncate">{offer.merchantName}</span>
+                              <CheckCircle2 className="w-3 h-3 text-[#16A34A] shrink-0" />
+                              {offer.merchantTier && (
+                                <span className="px-1 py-0.5 bg-purple-50 text-[#6D28D9] text-[8px] font-bold rounded border border-purple-100 shrink-0">{offer.merchantTier}</span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-[#6B7280]">
+                              <span className="font-bold text-[#16A34A]">{offer.completionRate}% completion</span> · {(offer.completedOrders || offer.ordersCount || 100).toLocaleString()} orders · ⚡ {offer.responseTimeMinutes || 2}m
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Row 3: Payment methods + action */}
+                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#F4F0FA]">
                           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
                             {methods.map((pm) => (
                               <button
                                 key={pm}
                                 onClick={() => onSelectOffer(offer, pm)}
-                                className="px-2 py-0.5 rounded-md bg-[#F8F7FC] hover:bg-purple-50 text-[#6D28D9] border border-[#EDE9FE] text-[9px] font-bold whitespace-nowrap cursor-pointer shrink-0"
+                                className="px-2 py-0.5 rounded bg-[#F4F1FA] text-[#6D28D9] text-[9px] font-bold whitespace-nowrap cursor-pointer shrink-0"
                               >
                                 {pm}
                               </button>
@@ -541,9 +561,9 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
                           </div>
                           <button
                             onClick={() => onSelectOffer(offer, methods[0])}
-                            className={`px-3.5 py-1.5 rounded-lg text-[11px] font-bold text-white shrink-0 cursor-pointer ${tradeType === 'BUY' ? 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7]' : 'bg-[#171717]'}`}
+                            className={`px-3.5 py-1.5 rounded-lg text-[11px] font-bold text-white shrink-0 cursor-pointer active:scale-95 transition-transform ${tradeType === 'BUY' ? 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7]' : 'bg-[#171717]'}`}
                           >
-                            {tradeType === 'BUY' ? 'Buy' : 'Sell'} → 
+                            {tradeType === 'BUY' ? 'Buy' : 'Sell'}
                           </button>
                         </div>
                       </div>
@@ -555,73 +575,78 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-[#EDE9FE] text-[10px] font-bold text-[#6B7280] uppercase tracking-wide">
-                        <th className="py-2.5 px-5">Merchant</th>
-                        <th className="py-2.5">Price</th>
-                        <th className="py-2.5">Available / Limit</th>
-                        <th className="py-2.5">Payment</th>
+                      <tr className="border-b border-[#EDE9FE] text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide">
+                        <th className="py-2.5 pl-5 pr-2">Merchant</th>
+                        <th className="py-2.5 px-2">Unit Price</th>
+                        <th className="py-2.5 px-2">Available</th>
+                        <th className="py-2.5 px-2">Payment Methods</th>
+                        <th className="py-2.5 px-2">24h Completion</th>
                         <th className="py-2.5 px-5 text-right">Trade</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#EDE9FE] text-xs">
+                    <tbody className="divide-y divide-[#F4F0FA] text-xs">
                       {filteredOffers.map((offer) => {
                         const methods = getMethods(offer);
                         return (
-                          <tr key={offer.id} className="hover:bg-[#F8F7FC]/70 transition-colors group">
-                            <td className="py-3 pl-5">
-                              <div className="flex items-center gap-2.5">
+                          <tr key={offer.id} className="hover:bg-[#FAF8FF] transition-colors group">
+                            <td className="py-2.5 pl-5 pr-2">
+                              <div className="flex items-center gap-2">
                                 <div className="relative shrink-0">
-                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#A855F7] text-white font-extrabold text-[10px] flex items-center justify-center">
+                                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#A855F7] text-white font-extrabold text-[10px] flex items-center justify-center">
                                     {offer.merchantName.substring(0, 2).toUpperCase()}
                                   </div>
                                   <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white" />
                                 </div>
-                                <div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="font-bold text-[#171717] group-hover:text-[#6D28D9] transition-colors">{offer.merchantName}</span>
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
-                                    {offer.merchantTier && (
-                                      <span className="px-1 py-0.5 bg-purple-50 text-[#6D28D9] text-[9px] font-bold rounded border border-purple-100">{offer.merchantTier}</span>
-                                    )}
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-bold text-[#171717] truncate group-hover:text-[#6D28D9] transition-colors">{offer.merchantName}</span>
+                                    <CheckCircle2 className="w-3 h-3 text-[#16A34A] shrink-0" />
                                   </div>
-                                  <p className="text-[10px] text-[#6B7280]">
-                                    <span className="text-emerald-700 font-bold">{offer.completionRate}%</span> · {(offer.completedOrders || offer.ordersCount || 120).toLocaleString()} orders · ⚡ {offer.responseTimeMinutes || 2}m
-                                  </p>
+                                  <div className="flex items-center gap-1 flex-wrap">
+                                    {offer.merchantTier && (
+                                      <span className="px-1 py-0.5 bg-purple-50 text-[#6D28D9] text-[8px] font-bold rounded border border-purple-100">{offer.merchantTier}</span>
+                                    )}
+                                    <span className="text-[9px] text-[#6B7280]">{(offer.completedOrders || offer.ordersCount || 120).toLocaleString()} orders</span>
+                                  </div>
                                 </div>
                               </div>
                             </td>
-                            <td className="py-3">
-                              <div className="flex items-baseline gap-1">
-                                <span className="text-base font-black text-[#171717] font-mono">${offer.pricePerXena.toFixed(4)}</span>
-                                <span className="text-[9px] font-bold text-[#7C3AED]">{selectedCurrency}</span>
+                            <td className="py-2.5 px-2">
+                              <div className="flex flex-col">
+                                <span className={`text-base font-black font-mono leading-tight ${tradeType === 'BUY' ? 'text-[#16A34A]' : 'text-[#E11D48]'}`}>{offer.pricePerXena.toFixed(4)}</span>
+                                <span className="text-[10px] text-[#9CA3AF] font-semibold leading-tight">≈ ${offer.pricePerXena.toFixed(2)} {selectedCurrency}</span>
                               </div>
-                              <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
-                                <CheckCircle2 className="w-3 h-3" /> 0% Fee
-                              </span>
                             </td>
-                            <td className="py-3">
-                              <p className="text-xs font-bold text-[#171717] font-mono">{offer.availableXena.toLocaleString()} {selectedAsset}</p>
-                              <p className="text-[10px] text-[#6B7280]">${offer.minLimit.toFixed(0)} – ${offer.maxLimit.toLocaleString()}</p>
+                            <td className="py-2.5 px-2">
+                              <p className="font-bold text-[#171717] font-mono leading-tight">{offer.availableXena.toLocaleString()} {selectedAsset}</p>
+                              <p className="text-[10px] text-[#6B7280] leading-tight">{selectedCurrency} {offer.minLimit.toFixed(0)} – {offer.maxLimit.toLocaleString()}</p>
                             </td>
-                            <td className="py-3">
-                              <div className="flex flex-wrap gap-1 max-w-xs">
+                            <td className="py-2.5 px-2">
+                              <div className="flex flex-wrap gap-1 max-w-[180px]">
                                 {methods.map((pm) => (
                                   <button
                                     key={pm}
                                     onClick={() => onSelectOffer(offer, pm)}
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#F8F7FC] hover:bg-purple-50 border border-[#EDE9FE] hover:border-purple-200 text-[#6D28D9] font-bold text-[10px] transition-all cursor-pointer hover:scale-105"
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#F4F1FA] text-[#6D28D9] font-bold text-[10px] hover:bg-[#EDE6FA] transition-colors cursor-pointer"
                                   >
                                     {pm}
                                   </button>
                                 ))}
                               </div>
                             </td>
-                            <td className="py-3 px-5 text-right">
+                            <td className="py-2.5 px-2 whitespace-nowrap">
+                              <div className="flex flex-col">
+                                <span className={`font-black text-sm leading-tight ${offer.completionRate >= 90 ? 'text-[#16A34A]' : 'text-[#F59E0B]'}`}>{offer.completionRate}%</span>
+                                <span className="text-[10px] text-[#9CA3AF] leading-tight">⚡ {offer.responseTimeMinutes || 2}m</span>
+                              </div>
+                            </td>
+                            <td className="py-2.5 px-5 text-right">
                               <button
                                 onClick={() => onSelectOffer(offer, methods[0])}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold text-white transition-all shadow-xs cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${tradeType === 'BUY' ? 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7]' : 'bg-[#171717] hover:bg-slate-800'}`}
+                                className={`inline-flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all shadow-xs cursor-pointer hover:scale-[1.02] active:scale-[0.97] ${tradeType === 'BUY' ? 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7]' : 'bg-[#171717] hover:bg-slate-800'}`}
                               >
-                                {tradeType === 'BUY' ? `Buy ${selectedAsset}` : `Sell ${selectedAsset}`}
+                                {tradeType === 'BUY' ? `Buy` : `Sell`}
+                                <ChevronRight className="w-3.5 h-3.5" />
                               </button>
                             </td>
                           </tr>
