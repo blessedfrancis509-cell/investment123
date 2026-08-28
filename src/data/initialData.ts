@@ -5,6 +5,7 @@ export const INITIAL_USER_PROFILE: UserProfile = {
   email: 'alex.morgan@xena.fi',
   kycTier: 'Tier 2 (Verified)',
   xenaId: 'XN-8492048',
+  xenaCode: 'xena-19274404',
   twoFactorEnabled: true,
   pinSet: true,
   verifiedAccountsCount: 3,
@@ -21,6 +22,8 @@ export const INITIAL_BALANCES: UserBalances = {
   currentPrice: 2.8500,
   stakedXena: 500.00,
   lockedInOrders: 0.00,
+  nairaBalance: 2450000.00,
+  xenaNgnRate: 4275.00,
 };
 
 export const INITIAL_MARKET_STATS: MarketStats = {

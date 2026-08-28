@@ -150,7 +150,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="text-[11px] text-[#6B7280]">{user.email}</div>
                     <div className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold text-[#6D28D9]">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]"></span>
-                      ID: {user.xenaId}
+                      ID: {user.xenaId} · {user.xenaCode}
                     </div>
                   </div>
 

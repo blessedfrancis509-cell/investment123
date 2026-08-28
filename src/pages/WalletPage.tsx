@@ -65,26 +65,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({
       isNative: false,
     },
     {
-      symbol: 'BTC',
-      name: 'Bitcoin',
-      network: 'Native SegWit',
-      balance: 0.1245,
-      price: 94800.00,
-      value: 11802.60,
-      change: '+3.2%',
-      isNative: false,
-    },
-    {
-      symbol: 'ETH',
-      name: 'Ethereum',
-      network: 'ERC-20',
-      balance: 1.45,
-      price: 3450.00,
-      value: 5002.50,
-      change: '+4.8%',
-      isNative: false,
-    },
-    {
       symbol: 'SOL',
       name: 'Solana',
       network: 'Solana Native',
@@ -220,9 +200,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({
           </div>
 
           <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-            <span className="text-[10px] text-purple-200 block">Funding & Card</span>
-            <span className="font-bold text-white font-mono block mt-0.5">$0.00 USD</span>
-            <span className="text-[10px] text-slate-300">Fiat Balances</span>
+            <span className="text-[10px] text-purple-200 block">Naira Wallet</span>
+            <span className="font-bold text-white font-mono block mt-0.5">
+              ₦{balances.nairaBalance.toLocaleString()}
+            </span>
+            <span className="text-[10px] text-slate-300">Escrow-protected fiat</span>
           </div>
         </div>
       </div>

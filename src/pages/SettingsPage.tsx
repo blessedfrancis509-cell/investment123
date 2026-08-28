@@ -26,26 +26,28 @@ import {
   Shield,
   Info,
   Languages,
+  ChevronRight,
 } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface SettingsPageProps {
   user: UserProfile;
   onUpdateSecurity: (settings: { twoFactor: boolean; pinSet: boolean }) => void;
+  onUpdateProfile?: (profile: Partial<UserProfile>) => void;
   onSelectTab: (tab: string) => void;
 }
 
-export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecurity, onSelectTab }) => {
+export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecurity, onUpdateProfile, onSelectTab }) => {
   const [activeTab, setActiveTab] = useState<'account' | 'notifications' | 'appearance' | 'security'>('account');
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
   // Account
   const [displayName, setDisplayName] = useState(user.name);
   const [emailAddr, setEmailAddr] = useState(user.email);
-  const [phone, setPhone] = useState('+1 (415) 555-0198');
-  const [country, setCountry] = useState('United States');
-  const [language, setLanguage] = useState('English (US)');
-  const [tz, setTz] = useState('(GMT-08:00) Pacific Time');
+  const [phone, setPhone] = useState('+234 803 555 0198');
+  const [country, setCountry] = useState('Nigeria');
+  const [language, setLanguage] = useState('English (UK)');
+  const [tz, setTz] = useState('(GMT+01:00) West Africa (Lagos)');
 
   // Password
   const [currentPw, setCurrentPw] = useState('');
@@ -72,7 +74,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
   const notifChannels = ['Email', 'Push', 'SMS'];
 
   // Appearance
-  const [currency, setCurrency] = useState<'USD' | 'EUR' | 'GBP'>('USD');
+  const [currency, setCurrency] = useState<'NGN' | 'USD' | 'EUR' | 'GBP'>('NGN');
   const [accent, setAccent] = useState('purple');
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
 
@@ -83,6 +85,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
 
   const handleSaveAccount = (e: React.FormEvent) => {
     e.preventDefault();
+    if (onUpdateProfile) onUpdateProfile({ name: displayName, email: emailAddr });
     notify('Account information saved successfully.');
   };
 
@@ -249,11 +252,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
                   onChange={(e) => setCountry(e.target.value)}
                   className="w-full bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl px-3 py-2 text-xs font-semibold text-[#171717] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20"
                 >
+                  <option>Nigeria</option>
+                  <option>Ghana</option>
+                  <option>Kenya</option>
+                  <option>South Africa</option>
                   <option>United States</option>
                   <option>United Kingdom</option>
                   <option>Germany</option>
                   <option>France</option>
-                  <option>Japan</option>
                   <option>Singapore</option>
                   <option>United Arab Emirates</option>
                   <option>Canada</option>
@@ -464,9 +470,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
                   onChange={(e) => setTz(e.target.value)}
                   className="w-full bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl pl-9 pr-3 py-2 text-xs font-semibold text-[#171717] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 cursor-pointer"
                 >
+                  <option>(GMT+01:00) West Africa (Lagos)</option>
+                  <option>(GMT+00:00) London</option>
                   <option>(GMT-08:00) Pacific Time</option>
                   <option>(GMT-05:00) Eastern Time</option>
-                  <option>(GMT+00:00) London</option>
                   <option>(GMT+01:00) Berlin</option>
                   <option>(GMT+09:00) Tokyo</option>
                   <option>(GMT+08:00) Singapore</option>
@@ -476,7 +483,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
             <div>
               <label className="text-[11px] font-bold text-[#171717] block mb-1">Display Currency</label>
               <div className="flex bg-[#F8F7FC] rounded-xl border border-[#EDE9FE] p-1">
-                {(['USD', 'EUR', 'GBP'] as const).map((cur) => (
+                {(['NGN', 'USD', 'EUR', 'GBP'] as const).map((cur) => (
                   <button
                     key={cur}
                     type="button"

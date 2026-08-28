@@ -4,6 +4,7 @@ export interface UserProfile {
   kycTier: string;
   avatarUrl?: string;
   xenaId: string;
+  xenaCode: string;
   twoFactorEnabled: boolean;
   pinSet: boolean;
   verifiedAccountsCount: number;
@@ -21,6 +22,8 @@ export interface UserBalances {
   currentPrice: number;
   stakedXena: number;
   lockedInOrders: number;
+  nairaBalance: number;
+  xenaNgnRate: number;
 }
 
 export interface MarketStats {

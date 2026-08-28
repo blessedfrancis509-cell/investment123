@@ -138,10 +138,10 @@ export default function App() {
     setP2POffers((prev) => [newOffer, ...prev]);
   };
 
-  const handleStakeNewPlan = (plan: InvestmentPlan) => {
+  const handleStakeNewPlan = (plan: InvestmentPlan): boolean => {
     if (balances.availableXena < plan.investedAmount) {
       alert(`Insufficient available XENA to stake this plan. Minimum required: ${plan.investedAmount} XENA`);
-      return;
+      return false;
     }
     const newTx: Transaction = {
       id: `TX-${Date.now().toString().slice(-6)}`,
@@ -169,6 +169,7 @@ export default function App() {
     }));
 
     setTransactions((prev) => [newTx, ...prev]);
+    return true;
   };
 
   const handleInternalTransfer = (amount: number, from: string, to: string) => {
@@ -276,6 +277,10 @@ export default function App() {
       twoFactorEnabled: settings.twoFactor,
       pinSet: settings.pinSet,
     }));
+  };
+
+  const handleUpdateProfile = (profile: Partial<UserProfile>) => {
+    setUser((prev) => ({ ...prev, ...profile }));
   };
 
   const handleMarkAllNotificationsRead = () => {
@@ -444,6 +449,7 @@ export default function App() {
           <SettingsPage
             user={user}
             onUpdateSecurity={handleUpdateSecurity}
+            onUpdateProfile={handleUpdateProfile}
             onSelectTab={handleNavSelect}
           />
         );
@@ -516,6 +522,8 @@ export default function App() {
         onClose={() => setDepositWithdrawOpen(false)}
         initialTab={depositWithdrawTab}
         availableXena={balances.availableXena}
+        nairaBalance={balances.nairaBalance}
+        xenaNgnRate={balances.xenaNgnRate}
         onSuccess={handleBalanceChange}
       />
 
@@ -533,6 +541,7 @@ export default function App() {
         onClose={() => setSendReceiveOpen(false)}
         initialMode={sendReceiveMode}
         availableXena={balances.availableXena}
+        myXenaCode={user.xenaCode}
         onSuccess={handleBalanceChange}
       />
 
