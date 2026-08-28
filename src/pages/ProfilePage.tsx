@@ -473,17 +473,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       )}
 
       {/* 1. Profile Header Hero Card */}
-      <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-6 sm:p-8 shadow-sm relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#1E1B4B] via-[#6D28D9] to-[#DB2777] rounded-[24px] p-6 sm:p-8 text-white shadow-lg shadow-purple-200/50 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#F59E0B]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-56 h-56 bg-[#22D3EE]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-10 left-10 w-40 h-40 bg-[#F0ABFC]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           {/* User Identity Info */}
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="relative group">
-              <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br ${avatarGradient} text-white flex items-center justify-center font-extrabold text-2xl shadow-md transition-transform group-hover:scale-105`}>
+              <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br ${avatarGradient} ring-4 ring-white/30 text-white flex items-center justify-center font-extrabold text-2xl shadow-lg transition-transform group-hover:scale-105`}>
                 {userName.split(' ').map((n) => n[0]).join('')}
               </div>
               <button
                 onClick={() => setIsEditingProfile(true)}
-                className="absolute -bottom-1 -right-1 p-1.5 bg-[#6D28D9] text-white rounded-full ring-4 ring-white shadow-xs hover:bg-[#5B21B6] transition-colors cursor-pointer"
+                className="absolute -bottom-1 -right-1 p-1.5 bg-white text-[#6D28D9] rounded-full ring-4 ring-[#6D28D9] shadow-xs hover:bg-purple-50 transition-colors cursor-pointer"
                 title="Edit Profile & Avatar"
               >
                 <Edit3 className="w-3 h-3" />
@@ -492,54 +495,54 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-extrabold text-[#171717]">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-white">
                   {userName}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#16A34A] text-xs font-bold border border-emerald-100 flex items-center gap-1">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/15 text-white text-xs font-bold border border-white/25 flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3" />
                   {currentKycTier}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-purple-50 text-[#6D28D9] text-xs font-bold border border-purple-100 flex items-center gap-1">
+                <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold border border-amber-300/40 flex items-center gap-1 shadow-sm">
                   <Award className="w-3 h-3" />
                   Gold Partner
                 </span>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 text-xs text-[#6B7280]">
-                <span>Email: <strong className="text-[#171717]">{userEmail}</strong></span>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-purple-200">
+                <span>Email: <strong className="text-white">{userEmail}</strong></span>
                 <span>•</span>
-                <span>User ID: <strong className="text-[#6D28D9] font-mono">{user.xenaId}</strong></span>
+                <span>User ID: <strong className="text-amber-300 font-mono">{user.xenaId}</strong></span>
                 <span>•</span>
-                <span>Affiliate Ref: <strong className="text-[#171717] font-mono">{referralCode}</strong></span>
+                <span>Affiliate Ref: <strong className="text-white font-mono">{referralCode}</strong></span>
               </div>
             </div>
           </div>
 
           {/* Quick Balance & Security Rating Pills */}
           <div className="flex flex-wrap items-center gap-3">
-            <div className="p-3.5 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE] text-left">
-              <span className="text-[10px] uppercase font-bold text-[#6B7280] block">Total Portfolio</span>
-              <span className="text-base font-extrabold text-[#171717] font-mono">
+            <div className="p-3.5 bg-white/10 rounded-2xl border border-white/20 backdrop-blur text-left">
+              <span className="text-[10px] uppercase font-bold text-purple-200 block">Total Portfolio</span>
+              <span className="text-base font-extrabold text-white font-mono">
                 ${totalFiat.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
               </span>
-              <span className="text-[10px] text-[#6D28D9] block font-bold">
+              <span className="text-[10px] text-amber-300 block font-bold">
                 {totalXenaAmount.toLocaleString()} XENA
               </span>
             </div>
 
-            <div className="p-3.5 bg-purple-50/60 rounded-2xl border border-purple-100 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white border-2 border-[#7C3AED] flex items-center justify-center text-[#7C3AED] font-extrabold text-xs font-mono shadow-xs">
+            <div className="p-3.5 bg-white/10 rounded-2xl border border-white/20 backdrop-blur flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 border-2 border-white/40 flex items-center justify-center text-white font-extrabold text-xs font-mono shadow-inner">
                 98%
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-[#6B7280] block">Security Score</span>
-                <span className="text-xs font-bold text-[#16A34A] block">SOC-2 Shielded</span>
+                <span className="text-[10px] uppercase font-bold text-purple-200 block">Security Score</span>
+                <span className="text-xs font-bold text-emerald-300 block">SOC-2 Shielded</span>
               </div>
             </div>
 
             <button
               onClick={() => setShowFreezeModal(true)}
-              className="p-3.5 rounded-2xl bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-red-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer backdrop-blur"
               title="Emergency 1-Click Lockdown"
             >
               <AlertTriangle className="w-4 h-4" />
@@ -549,8 +552,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         </div>
 
         {savedNotice && (
-          <div className="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-xs font-bold text-[#16A34A] flex items-center gap-2 animate-fade-in">
-            <Check className="w-4 h-4 stroke-[3]" />
+          <div className="relative z-10 mt-4 p-3 rounded-xl bg-white/15 border border-white/25 text-white text-xs font-bold flex items-center gap-2 animate-fade-in">
+            <Check className="w-4 h-4 stroke-[3] text-emerald-300" />
             <span>{savedNotice}</span>
           </div>
         )}
@@ -576,7 +579,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               onClick={() => setActiveSubTab(tab.id as any)}
               className={`flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-[#6D28D9] text-white shadow-xs'
+                  ? 'bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white shadow-md shadow-fuchsia-200/50'
                   : 'bg-white text-[#6B7280] hover:text-[#171717] border border-[#EDE9FE]'
               }`}
             >

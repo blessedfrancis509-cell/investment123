@@ -38,7 +38,7 @@ interface SettingsPageProps {
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecurity, onUpdateProfile, onSelectTab }) => {
-  const [activeTab, setActiveTab] = useState<'account' | 'notifications' | 'appearance' | 'security'>('account');
+  const [activeTab, setActiveTab] = useState<'overview' | 'account' | 'security' | 'affiliate' | 'notifications' | 'appearance'>('overview');
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
   // Account
@@ -120,10 +120,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
   };
 
   const tabs = [
+    { id: 'overview', label: 'Overview', icon: Info },
     { id: 'account', label: 'Account', icon: UserRound },
+    { id: 'security', label: 'Security & Auth', icon: ShieldCheck },
+    { id: 'affiliate', label: 'Affiliate & Referrals', icon: Compass },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'appearance', label: 'Language & Appearance', icon: Palette },
-    { id: 'security', label: 'Security & Privacy', icon: ShieldCheck },
+    { id: 'appearance', label: 'Appearance', icon: Palette },
   ] as const;
 
   const card = 'bg-white border border-[#EDE9FE] rounded-[20px] p-5 sm:p-6 shadow-sm';
@@ -179,27 +181,95 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
         </div>
       )}
 
-      {/* Sub-tab Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-[#EDE9FE]">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                isActive ? 'bg-[#6D28D9] text-white shadow-xs' : 'bg-white text-[#6B7280] hover:text-[#171717] border border-[#EDE9FE]'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* Settings Sidebar List + Content */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+        {/* Left: Vertical List */}
+        <div className="md:col-span-3 bg-white border border-[#EDE9FE] rounded-[20px] p-2 shadow-sm md:sticky md:top-20">
+          <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex-1 md:flex-none ${
+                    isActive
+                      ? 'bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white shadow-md shadow-fuchsia-200/50'
+                      : 'text-[#6B7280] hover:text-[#171717] hover:bg-[#F8F7FC]'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{tab.label}</span>
+                  {isActive && <span className="ml-auto hidden md:block w-1.5 h-1.5 rounded-full bg-white" />}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
 
-      {/* ============ ACCOUNT ============ */}
+        {/* Right: Content */}
+        <div className="md:col-span-9 space-y-5">
+          {activeTab === 'overview' && (
+            <div className="space-y-5">
+              <div className="bg-gradient-to-br from-[#4C1D95] via-[#7C3AED] to-[#DB2777] rounded-[22px] p-5 sm:p-6 text-white shadow-lg shadow-purple-200/50 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#F59E0B]/25 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-1/4 w-40 h-40 bg-[#22D3EE]/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="relative z-10 flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-white/15 border border-white/25 backdrop-blur flex items-center justify-center">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-extrabold tracking-tight">Account Overview</h2>
+                    <p className="text-[11px] text-purple-100 mt-0.5">Everything you need to manage your XENA account from one place.</p>
+                  </div>
+                </div>
+                <div className="relative z-10 mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { label: 'Account Tier', value: user.kycTier },
+                    { label: 'Security Score', value: '98%' },
+                    { label: '2FA', value: twoFactor ? 'Enabled' : 'Off' },
+                    { label: 'Referral Rewards', value: '₦0.00' },
+                  ].map((s) => (
+                    <div key={s.label} className="p-2.5 rounded-xl bg-white/10 border border-white/15 backdrop-blur text-center">
+                      <div className="text-[9px] uppercase font-bold text-purple-200 tracking-wider">{s.label}</div>
+                      <div className="text-sm font-extrabold text-white mt-0.5">{s.value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className={`${card} space-y-2`}>
+                <h3 className="text-sm font-bold text-[#171717] flex items-center gap-2 pb-3 border-b border-[#EDE9FE]">
+                  <Compass className="w-4 h-4 text-[#6D28D9]" /> Quick Settings
+                </h3>
+                {[
+                  { icon: UserRound, title: 'Account Information', desc: 'Name, email, phone & region', tab: 'account' },
+                  { icon: ShieldCheck, title: 'Security & Authentication', desc: '2FA, PIN, sessions & privacy', tab: 'security' },
+                  { icon: Compass, title: 'Affiliate & Referrals', desc: 'Invite friends & earn rewards', tab: 'affiliate' },
+                  { icon: Bell, title: 'Notifications & Alerts', desc: 'Choose what you hear about', tab: 'notifications' },
+                  { icon: Palette, title: 'Appearance & Language', desc: 'Theme, currency & region', tab: 'appearance' },
+                ].map(({ icon: Icon, title, desc, tab }) => (
+                  <button
+                    key={title}
+                    onClick={() => setActiveTab(tab as typeof activeTab)}
+                    className="w-full flex items-center gap-3 p-3 bg-[#F8F7FC] hover:bg-white border border-[#EDE9FE] hover:border-purple-200 rounded-xl transition-all text-left cursor-pointer group"
+                  >
+                    <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#DB2777] text-white flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4" />
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-xs font-bold text-[#171717]">{title}</span>
+                      <span className="block text-[10px] text-[#6B7280] truncate">{desc}</span>
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-[#6B7280] group-hover:text-[#6D28D9] group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ============ ACCOUNT ============ */}
       {activeTab === 'account' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
           {/* Personal Information */}
@@ -684,6 +754,93 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
           </div>
         </div>
       )}
+
+      {/* ============ AFFILIATE & REFERRALS ============ */}
+      {activeTab === 'affiliate' && (
+        <div className="space-y-5 animate-fade-in">
+          <div className="bg-gradient-to-br from-[#7C3AED] via-[#DB2777] to-[#F59E0B] rounded-[22px] p-5 sm:p-6 text-white shadow-lg shadow-fuchsia-200/50 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-white/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#22D3EE]/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-white/15 border border-white/25 backdrop-blur flex items-center justify-center">
+                <Compass className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-sm font-extrabold tracking-tight">Affiliate & Referrals</h2>
+                <p className="text-[11px] text-purple-100 mt-0.5">Invite friends and earn lifetime rewards from their trading activity.</p>
+              </div>
+            </div>
+            <div className="relative z-10 mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { label: 'Total Referrals', value: '12' },
+                { label: 'Active Friends', value: '8' },
+                { label: 'Total Earned', value: '₦124,500' },
+                { label: 'Pending Bonus', value: '₦8,250' },
+              ].map((s) => (
+                <div key={s.label} className="p-2.5 rounded-xl bg-white/10 border border-white/15 backdrop-blur text-center">
+                  <div className="text-[9px] uppercase font-bold text-purple-200 tracking-wider">{s.label}</div>
+                  <div className="text-sm font-extrabold text-white mt-0.5">{s.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={`${card} space-y-3`}>
+            <div className="pb-3 border-b border-[#EDE9FE]">
+              <h3 className="text-sm font-bold text-[#171717] flex items-center gap-2">
+                <Compass className="w-4 h-4 text-[#6D28D9]" /> Your Referral Link
+              </h3>
+              <p className="text-[11px] text-[#6B7280] mt-0.5">Share this link — earn 5% of your friends' trading fees forever</p>
+            </div>
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-[#F8F7FC] border border-[#EDE9FE]">
+              <code className="flex-1 text-xs font-mono font-bold text-[#6D28D9] break-all truncate">https://xena.exchange/r/blessed509</code>
+              <button
+                onClick={() => notify('Referral link copied to clipboard.')}
+                className="px-3.5 py-2 rounded-lg bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white text-xs font-bold hover:opacity-95 transition-all shadow-sm shadow-fuchsia-200/50 cursor-pointer"
+              >
+                Copy Link
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-center text-[10px]">
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                <span className="block font-extrabold text-emerald-600 text-sm">5%</span>
+                <span className="text-emerald-700">Friend Trading Fee Rebate</span>
+              </div>
+              <div className="p-3 rounded-xl bg-purple-50 border border-purple-100">
+                <span className="block font-extrabold text-[#6D28D9] text-sm">₦2,000</span>
+                <span className="text-purple-700">One-time Signup Bonus</span>
+              </div>
+            </div>
+          </div>
+
+          <div className={`${card} space-y-2`}>
+            <h3 className="text-sm font-bold text-[#171717] flex items-center gap-2 pb-3 border-b border-[#EDE9FE]">
+              <UserRound className="w-4 h-4 text-[#6D28D9]" /> Referral History
+            </h3>
+            {[
+              { name: 'Chinedu O.', date: 'Aug 26, 2026', reward: '+₦4,250' },
+              { name: 'Fatima B.', date: 'Aug 22, 2026', reward: '+₦6,100' },
+              { name: 'Tunde A.', date: 'Aug 18, 2026', reward: '+₦2,800' },
+              { name: 'Amara N.', date: 'Aug 15, 2026', reward: '+₦9,900' },
+            ].map((r, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#DB2777] text-white font-bold text-xs flex items-center justify-center">
+                    {r.name.charAt(0)}
+                  </div>
+                  <div>
+                    <span className="block text-xs font-bold text-[#171717]">{r.name}</span>
+                    <span className="block text-[10px] text-[#6B7280]">{r.date}</span>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-emerald-600">{r.reward}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+        </div>
+      </div>
     </div>
   );
 };

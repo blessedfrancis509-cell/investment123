@@ -275,27 +275,6 @@ export const MarketPage: React.FC<MarketPageProps> = ({
               <p className="text-[10px] text-purple-200">Xena Network Native Asset</p>
             </div>
           </div>
-
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 divide-x divide-white/15">
-            <div className="pr-3">
-              <span className="text-[8px] uppercase font-bold text-purple-200 tracking-wider block">Price</span>
-              <span className="text-sm font-extrabold text-white font-mono leading-none">${marketStats.price.toFixed(4)}</span>
-            </div>
-            <div className="pl-3">
-              <span className="text-[8px] uppercase font-bold text-purple-200 tracking-wider block">24h Change</span>
-              <span className="text-xs font-bold text-emerald-300 flex items-center gap-0.5 font-mono leading-none">
-                <TrendingUp className="w-3 h-3" /> +{marketStats.change24h}%
-              </span>
-            </div>
-            <div className="pl-3">
-              <span className="text-[8px] uppercase font-bold text-purple-200 tracking-wider block">24h Range</span>
-              <span className="text-[10px] font-semibold text-white font-mono leading-none">${marketStats.low24h.toFixed(2)}-{marketStats.high24h.toFixed(2)}</span>
-            </div>
-            <div className="pl-3">
-              <span className="text-[8px] uppercase font-bold text-purple-200 tracking-wider block">Volume</span>
-              <span className="text-[10px] font-bold text-amber-300 font-mono leading-none">${(marketStats.volume24hUsdt / 1_000_000).toFixed(2)}M</span>
-            </div>
-          </div>
         </div>
       </div>
 

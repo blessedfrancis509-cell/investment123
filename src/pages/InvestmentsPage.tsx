@@ -9,19 +9,19 @@ interface InvestmentsPageProps {
   onStakeNewPlan: (plan: InvestmentPlan) => boolean;
 }
 
-const CATEGORY_META: Record<string, { label: string; accent: string }> = {
-  '2-Week (14D)': { label: '⚡ 2-Week (14D) Package', accent: 'bg-purple-50 text-[#6D28D9] border-purple-100' },
-  'Flexible': { label: 'Flexible Vault', accent: 'bg-emerald-50 text-[#16A34A] border-emerald-100' },
-  'Fixed Term': { label: 'Fixed Term', accent: 'bg-blue-50 text-blue-600 border-blue-100' },
-  'VIP Tier': { label: 'VIP Tier', accent: 'bg-amber-50 text-amber-700 border-amber-100' },
-  'Liquidity': { label: 'Liquidity Pools', accent: 'bg-rose-50 text-rose-600 border-rose-100' },
-  'Institutional': { label: 'Institutional', accent: 'bg-slate-100 text-slate-700 border-slate-200' },
-  'Growth': { label: 'Growth Plans', accent: 'bg-purple-50 text-[#6D28D9] border-purple-100' },
-  'Staking': { label: 'Staking', accent: 'bg-indigo-50 text-indigo-600 border-indigo-100' },
-  'Calculated': { label: 'Custom Vault', accent: 'bg-teal-50 text-teal-600 border-teal-100' },
+const CATEGORY_META: Record<string, { label: string; accent: string; grad: string; glow: string }> = {
+  '2-Week (14D)': { label: '⚡ 2-Week (14D) Package', accent: 'bg-purple-50 text-[#6D28D9] border-purple-100', grad: 'from-purple-500 via-fuchsia-500 to-pink-500', glow: 'shadow-fuchsia-200/40' },
+  'Flexible': { label: 'Flexible Vault', accent: 'bg-emerald-50 text-[#16A34A] border-emerald-100', grad: 'from-emerald-500 to-teal-500', glow: 'shadow-emerald-200/40' },
+  'Fixed Term': { label: 'Fixed Term', accent: 'bg-blue-50 text-blue-600 border-blue-100', grad: 'from-blue-500 to-cyan-500', glow: 'shadow-sky-200/40' },
+  'VIP Tier': { label: 'VIP Tier', accent: 'bg-amber-50 text-amber-700 border-amber-100', grad: 'from-amber-500 to-orange-500', glow: 'shadow-amber-200/40' },
+  'Liquidity': { label: 'Liquidity Pools', accent: 'bg-rose-50 text-rose-600 border-rose-100', grad: 'from-rose-500 to-red-500', glow: 'shadow-rose-200/40' },
+  'Institutional': { label: 'Institutional', accent: 'bg-slate-100 text-slate-700 border-slate-200', grad: 'from-slate-600 to-slate-800', glow: 'shadow-slate-200/40' },
+  'Growth': { label: 'Growth Plans', accent: 'bg-purple-50 text-[#6D28D9] border-purple-100', grad: 'from-violet-500 to-purple-500', glow: 'shadow-purple-200/40' },
+  'Staking': { label: 'Staking', accent: 'bg-indigo-50 text-indigo-600 border-indigo-100', grad: 'from-indigo-500 to-blue-500', glow: 'shadow-indigo-200/40' },
+  'Calculated': { label: 'Custom Vault', accent: 'bg-teal-50 text-teal-600 border-teal-100', grad: 'from-teal-500 to-emerald-500', glow: 'shadow-teal-200/40' },
 };
 
-const defaultMeta = { label: 'Investment Plan', accent: 'bg-purple-50 text-[#6D28D9] border-purple-100' };
+const defaultMeta = { label: 'Investment Plan', accent: 'bg-purple-50 text-[#6D28D9] border-purple-100', grad: 'from-purple-500 to-fuchsia-500', glow: 'shadow-purple-200/40' };
 
 const catalogPlans = [
   {
@@ -175,19 +175,20 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
   return (
     <div className="space-y-3 animate-fade-in" id="investments-page-view">
       {/* ===== 1. HEADER ===== */}
-      <div className="bg-gradient-to-br from-[#6D28D9] via-[#7C3AED] to-[#C026D3] rounded-[20px] px-4 sm:px-6 py-4 text-white shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-56 h-56 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-0 left-1/4 w-40 h-40 bg-[#FBBF24]/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-44 h-44 bg-[#22D3EE]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-gradient-to-br from-[#4C1D95] via-[#7C3AED] to-[#DB2777] rounded-[20px] px-4 sm:px-6 py-4 text-white shadow-lg shadow-purple-200/60 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-56 h-56 bg-[#F59E0B]/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 left-1/3 w-40 h-40 bg-[#22D3EE]/25 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-52 h-52 bg-[#F0ABFC]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 right-1/4 w-40 h-40 bg-[#4ADE80]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center shrink-0 shadow-inner">
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-lg sm:text-xl font-extrabold tracking-tight">Invest & Earn</h1>
-                <span className="px-2 py-0.5 rounded-md bg-white/15 border border-white/25 text-[9px] font-bold uppercase tracking-wide backdrop-blur">Institutional Staking</span>
+                <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-400 to-orange-500 text-[9px] font-extrabold uppercase tracking-wide shadow-sm">Up to 52% APY</span>
               </div>
               <p className="text-[11px] text-purple-100">Lock XENA into validator vaults & liquidity pools with daily compounding.</p>
             </div>
@@ -317,7 +318,7 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
               { id: 'liquidity', label: 'Liquidity' },
             ].map((cat) => (
               <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${activeCategory === cat.id ? 'bg-white text-[#6D28D9] shadow-xs' : 'text-[#6B7280] hover:text-[#171717]'}`}>
+                className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${activeCategory === cat.id ? 'bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white shadow-sm shadow-fuchsia-200/60' : 'text-[#6B7280] hover:text-[#171717]'}`}>
                 {cat.label}
               </button>
             ))}
@@ -330,63 +331,66 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
             // Prevent buying a package that is already active (dedupe by name)
             const alreadyActive = plans.some((p) => p.name === plan.name);
             return (
-              <div key={plan.id} className="bg-white border border-[#EDE9FE] rounded-[16px] p-3.5 shadow-xs hover:border-purple-300 hover:shadow-md transition-all flex flex-col justify-between gap-3">
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <div>
-                      <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold border ${meta.accent}`}>{plan.category}</span>
-                      <h3 className="text-xs font-bold text-[#171717] mt-1.5 leading-snug">{plan.name}</h3>
+              <div key={plan.id} className="bg-white border border-[#EDE9FE] rounded-[16px] overflow-hidden shadow-xs hover:shadow-lg hover:bg-gradient-to-b hover:from-white hover:to-purple-50/30 transition-all flex flex-col justify-between group">
+                <div className={`h-1.5 bg-gradient-to-r ${meta.grad}`} />
+                <div className="p-3.5 flex flex-col justify-between gap-3 flex-1">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <div>
+                        <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold border ${meta.accent}`}>{plan.category}</span>
+                        <h3 className="text-xs font-bold text-[#171717] mt-1.5 leading-snug group-hover:text-[#6D28D9] transition-colors">{plan.name}</h3>
+                      </div>
+                      <span className={`relative text-[11px] font-extrabold bg-gradient-to-r ${meta.grad} text-white px-2 py-1 rounded-full shadow-md ${meta.glow} font-mono shrink-0`}>+{plan.apy}%</span>
                     </div>
-                    <span className="text-[10px] font-bold text-[#16A34A] bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100 font-mono shrink-0">+{plan.apy}%</span>
+
+                    <p className="text-[10px] text-[#6B7280] leading-relaxed mb-2">{plan.description}</p>
+
+                    <div className="grid grid-cols-3 gap-1.5 mb-2">
+                      <div className={`p-1.5 bg-gradient-to-br ${meta.grad} bg-opacity-10 rounded-lg border ${plan.category === 'Flexible' ? 'border-emerald-100' : 'border-purple-100'} text-center`}>
+                        <span className="text-[8px] text-[#6B7280] block font-medium leading-none">Lock</span>
+                        <span className="font-bold text-[#171717] text-[10px]">{plan.duration}</span>
+                      </div>
+                      <div className="p-1.5 bg-[#F8F7FC] rounded-lg border border-[#EDE9FE] text-center">
+                        <span className="text-[8px] text-[#6B7280] block font-medium leading-none">Min</span>
+                        <span className="font-bold text-[#171717] text-[10px]">{plan.minDeposit} XENA</span>
+                      </div>
+                      <div className="p-1.5 bg-[#F8F7FC] rounded-lg border border-[#EDE9FE] text-center">
+                        <span className="text-[8px] text-[#6B7280] block font-medium leading-none">Risk</span>
+                        <span className="font-bold text-[#171717] text-[10px]">{plan.risk}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between px-2 py-1 rounded-md bg-emerald-50/60 border border-emerald-100 mb-1">
+                      <span className="text-[9px] text-emerald-800 font-bold">APY Badge</span>
+                      <span className="text-[9px] font-bold text-[#6D28D9]">{plan.badge}</span>
+                    </div>
                   </div>
 
-                  <p className="text-[10px] text-[#6B7280] leading-relaxed mb-2">{plan.description}</p>
-
-                  <div className="grid grid-cols-3 gap-1.5 mb-2">
-                    <div className="p-1.5 bg-[#F8F7FC] rounded-lg border border-[#EDE9FE] text-center">
-                      <span className="text-[8px] text-[#6B7280] block font-medium leading-none">Lock</span>
-                      <span className="font-bold text-[#171717] text-[10px]">{plan.duration}</span>
-                    </div>
-                    <div className="p-1.5 bg-[#F8F7FC] rounded-lg border border-[#EDE9FE] text-center">
-                      <span className="text-[8px] text-[#6B7280] block font-medium leading-none">Min</span>
-                      <span className="font-bold text-[#171717] text-[10px]">{plan.minDeposit} XENA</span>
-                    </div>
-                    <div className="p-1.5 bg-[#F8F7FC] rounded-lg border border-[#EDE9FE] text-center">
-                      <span className="text-[8px] text-[#6B7280] block font-medium leading-none">Risk</span>
-                      <span className="font-bold text-[#171717] text-[10px]">{plan.risk}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between px-2 py-1 rounded-md bg-emerald-50/60 border border-emerald-100 mb-1">
-                    <span className="text-[9px] text-emerald-800 font-bold">APY Badge</span>
-                    <span className="text-[9px] font-bold text-[#6D28D9]">{plan.badge}</span>
-                  </div>
+                  <button
+                    onClick={() => {
+                      const ok = onStakeNewPlan({
+                        id: plan.id,
+                        name: plan.name,
+                        category: plan.category,
+                        investedAmount: Math.max(plan.minDeposit, 100),
+                        earnedAmount: 0,
+                        projectedReturnPercent: plan.apy,
+                        daysRemaining: plan.days,
+                        totalDays: plan.days,
+                        progressPercent: 0,
+                      });
+                      if (ok) notifyStake(plan.name);
+                    }}
+                    disabled={alreadyActive}
+                    className={`w-full py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95 ${alreadyActive ? 'bg-[#F8F7FC] text-[#6B7280] border border-[#EDE9FE] cursor-not-allowed' : `bg-gradient-to-r ${meta.grad} text-white shadow-md ${meta.glow} hover:opacity-95`}`}
+                  >
+                    {alreadyActive ? (
+                      <><Check className="w-3 h-3" /> Already Active</>
+                    ) : (
+                      <><Plus className="w-3.5 h-3.5" /> Stake Now ({plan.duration})</>
+                    )}
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => {
-                    const ok = onStakeNewPlan({
-                      id: plan.id,
-                      name: plan.name,
-                      category: plan.category,
-                      investedAmount: Math.max(plan.minDeposit, 100),
-                      earnedAmount: 0,
-                      projectedReturnPercent: plan.apy,
-                      daysRemaining: plan.days,
-                      totalDays: plan.days,
-                      progressPercent: 0,
-                    });
-                    if (ok) notifyStake(plan.name);
-                  }}
-                  disabled={alreadyActive}
-                  className={`w-full py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95 ${alreadyActive ? 'bg-[#F8F7FC] text-[#6B7280] border border-[#EDE9FE] cursor-not-allowed' : 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white shadow-md shadow-purple-200/50 hover:opacity-95'}`}
-                >
-                  {alreadyActive ? (
-                    <><Check className="w-3 h-3" /> Already Active</>
-                  ) : (
-                    <><Plus className="w-3.5 h-3.5" /> Stake Now ({plan.duration})</>
-                  )}
-                </button>
               </div>
             );
           })}
@@ -426,38 +430,38 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
                 ].map((item) => (
                   <button key={item.days} type="button"
                     onClick={() => { setCalcDuration(item.days); setCalcApy(item.apy); }}
-                    className={`py-1.5 px-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer relative ${calcDuration === item.days ? 'bg-purple-50 text-[#6D28D9] border-purple-200 shadow-xs' : 'bg-[#F8F7FC] text-[#6B7280] border-[#EDE9FE] hover:text-[#171717] hover:bg-white'}`}>
+                    className={`py-1.5 px-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer relative ${calcDuration === item.days ? 'bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white border-transparent shadow-sm shadow-fuchsia-200/60' : 'bg-[#F8F7FC] text-[#6B7280] border-[#EDE9FE] hover:text-[#171717] hover:bg-white'}`}>
                     {item.highlight && (
-                      <span className="absolute -top-1.5 right-1.5 bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white text-[8px] font-extrabold px-1 py-0.5 rounded-full">{item.highlight}</span>
+                      <span className="absolute -top-1.5 right-1.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[8px] font-extrabold px-1 py-0.5 rounded-full">{item.highlight}</span>
                     )}
                     <div>{item.label}</div>
-                    <div className="text-[9px] text-[#16A34A]">+{item.apy}%</div>
+                    <div className={`text-[9px] ${calcDuration === item.days ? 'text-emerald-200' : 'text-[#16A34A]'}`}>+{item.apy}%</div>
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-5 p-3.5 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE] space-y-2">
-            <div className="text-[9px] text-[#6B7280] font-bold uppercase tracking-wider">Projected Earnings</div>
+          <div className="lg:col-span-5 p-3.5 bg-gradient-to-br from-[#4C1D95] via-[#7C3AED] to-[#DB2777] rounded-xl border border-purple-200 text-white shadow-lg shadow-purple-200/50 space-y-2">
+            <div className="text-[9px] text-purple-200 font-bold uppercase tracking-wider">Projected Earnings</div>
             <div className="space-y-1 text-[11px]">
               <div className="flex justify-between">
-                <span className="text-[#6B7280]">Daily Rewards</span>
-                <span className="font-bold text-[#16A34A] font-mono">+{dailyReturn.toFixed(3)} XENA</span>
+                <span className="text-purple-100">Daily Rewards</span>
+                <span className="font-bold text-emerald-300 font-mono">+{dailyReturn.toFixed(3)} XENA</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#6B7280]">Period Earnings</span>
-                <span className="font-bold text-[#7C3AED] font-mono">+{calculatedReturn.toFixed(2)} XENA</span>
+                <span className="text-purple-100">Period Earnings</span>
+                <span className="font-bold text-amber-300 font-mono">+{calculatedReturn.toFixed(2)} XENA</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#6B7280]">Fiat at Maturity</span>
-                <span className="font-bold text-[#171717] font-mono">${((calcAmount + calculatedReturn) * balances.usdRate).toFixed(2)}</span>
+                <span className="text-purple-100">Fiat at Maturity</span>
+                <span className="font-bold text-white font-mono">${((calcAmount + calculatedReturn) * balances.usdRate).toFixed(2)}</span>
               </div>
             </div>
-            <div className="pt-2 border-t border-[#EDE9FE] flex items-center justify-between">
+            <div className="pt-2 border-t border-white/20 flex items-center justify-between">
               <div>
-                <span className="text-[9px] text-[#6B7280] block">Total Payout</span>
-                <span className="text-sm font-extrabold text-[#171717] font-mono">{(calcAmount + calculatedReturn).toFixed(2)} XENA</span>
+                <span className="text-[9px] text-purple-200 block">Total Payout</span>
+                <span className="text-sm font-extrabold text-white font-mono">{(calcAmount + calculatedReturn).toFixed(2)} XENA</span>
               </div>
               <button
                 onClick={() => {
@@ -474,7 +478,7 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
                   });
                   if (ok) notifyStake(`${calcDuration}-Day Custom Vault`);
                 }}
-                className="px-3.5 py-2 rounded-lg bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white font-bold text-[11px] hover:opacity-95 shadow-xs cursor-pointer">
+                className="px-3.5 py-2 rounded-lg bg-white text-[#6D28D9] font-bold text-[11px] hover:bg-purple-50 shadow-sm cursor-pointer">
                 Stake {calcAmount.toLocaleString()}
               </button>
             </div>
