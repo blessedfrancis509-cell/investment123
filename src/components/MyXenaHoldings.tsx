@@ -36,7 +36,7 @@ export const MyXenaHoldings: React.FC<MyXenaHoldingsProps> = ({ balances, onTrad
         <div>
           <span className="text-xs text-[#6B7280] block">Available Balance</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold text-[#171717]">
+            <span className="text-xl font-bold text-gradient">
               {balances.availableXena.toLocaleString('en-US', { minimumFractionDigits: 2 })} XENA
             </span>
           </div>
@@ -56,16 +56,16 @@ export const MyXenaHoldings: React.FC<MyXenaHoldingsProps> = ({ balances, onTrad
 
       {/* Details Grid */}
       <div className="grid grid-cols-2 gap-2">
-        <div className="p-2.5 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE]">
-          <span className="text-[10px] text-[#6B7280] block">Avg Buy Price</span>
-          <span className="text-xs font-bold text-[#171717] font-mono">
+        <div className="p-2.5 bg-slate-50/60 rounded-xl border border-slate-100">
+          <span className="text-[10px] text-slate-500 block">Avg Buy Price</span>
+          <span className="text-xs font-bold text-slate-700 font-mono">
             ${balances.averageBuyPrice.toFixed(4)}
           </span>
         </div>
 
-        <div className="p-2.5 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE]">
-          <span className="text-[10px] text-[#6B7280] block">Market Price</span>
-          <span className="text-xs font-bold text-[#6D28D9] font-mono">
+        <div className="p-2.5 bg-purple-50/60 rounded-xl border border-purple-100">
+          <span className="text-[10px] text-purple-500 block">Market Price</span>
+          <span className="text-xs font-bold text-purple-800 font-mono">
             ${balances.currentPrice.toFixed(4)}
           </span>
         </div>

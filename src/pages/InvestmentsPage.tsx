@@ -237,25 +237,25 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <div className="p-2.5 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE]">
-            <span className="text-[9px] text-[#6B7280] uppercase font-bold block">Staked</span>
-            <span className="text-sm font-extrabold text-[#171717] font-mono block mt-0.5">{totalInvested.toLocaleString()} XENA</span>
-            <span className="text-[9px] text-[#6B7280] block mt-0.5">≈ ${(totalInvested * balances.usdRate).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+          <div className="p-2.5 bg-violet-50/60 rounded-xl border border-violet-100">
+            <span className="text-[9px] text-violet-600 uppercase font-bold block">Staked</span>
+            <span className="text-sm font-extrabold text-violet-900 font-mono block mt-0.5">{totalInvested.toLocaleString()} XENA</span>
+            <span className="text-[9px] text-violet-500 block mt-0.5">≈ ${(totalInvested * balances.usdRate).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
           </div>
-          <div className="p-2.5 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE]">
-            <span className="text-[9px] text-[#6B7280] uppercase font-bold block">Earned</span>
-            <span className="text-sm font-extrabold text-[#16A34A] font-mono block mt-0.5">+{totalEarned.toFixed(2)}</span>
-            <span className="text-[9px] text-[#6B7280] block mt-0.5">+${(totalEarned * balances.usdRate).toFixed(2)}</span>
+          <div className="p-2.5 bg-emerald-50/60 rounded-xl border border-emerald-100">
+            <span className="text-[9px] text-emerald-600 uppercase font-bold block">Earned</span>
+            <span className="text-sm font-extrabold text-emerald-600 font-mono block mt-0.5">+{totalEarned.toFixed(2)}</span>
+            <span className="text-[9px] text-emerald-500 block mt-0.5">+${(totalEarned * balances.usdRate).toFixed(2)}</span>
           </div>
-          <div className="p-2.5 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE]">
-            <span className="text-[9px] text-[#6B7280] uppercase font-bold block">Avg APY</span>
-            <span className="text-sm font-extrabold text-[#171717] font-mono block mt-0.5">{avgApy}%</span>
-            <span className="text-[9px] text-[#6B7280] block mt-0.5">compounded daily</span>
+          <div className="p-2.5 bg-sky-50/60 rounded-xl border border-sky-100">
+            <span className="text-[9px] text-sky-600 uppercase font-bold block">Avg APY</span>
+            <span className="text-sm font-extrabold text-sky-800 font-mono block mt-0.5">{avgApy}%</span>
+            <span className="text-[9px] text-sky-500 block mt-0.5">compounded daily</span>
           </div>
-          <div className="p-2.5 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE]">
-            <span className="text-[9px] text-[#6B7280] uppercase font-bold block">Daily Payout</span>
-            <span className="text-sm font-extrabold text-[#16A34A] font-mono block mt-0.5">+{dailyPayoutXena.toFixed(2)} XENA</span>
-            <span className="text-[9px] text-[#6B7280] block mt-0.5">≈ +${(dailyPayoutXena * balances.usdRate).toFixed(2)}/day</span>
+          <div className="p-2.5 bg-amber-50/60 rounded-xl border border-amber-100">
+            <span className="text-[9px] text-amber-600 uppercase font-bold block">Daily Payout</span>
+            <span className="text-sm font-extrabold text-amber-700 font-mono block mt-0.5">+{dailyPayoutXena.toFixed(2)} XENA</span>
+            <span className="text-[9px] text-amber-600 block mt-0.5">≈ +${(dailyPayoutXena * balances.usdRate).toFixed(2)}/day</span>
           </div>
         </div>
 

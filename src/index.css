@@ -53,6 +53,17 @@
     color: #6D28D9;
   }
 
+  .text-gradient {
+    background: linear-gradient(120deg, #6D28D9 0%, #A855F7 45%, #EC4899 80%, #F59E0B 115%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .bg-xena-vibrant {
+    background: linear-gradient(120deg, #7C3AED 0%, #A855F7 35%, #EC4899 70%, #F59E0B 110%);
+  }
+
   .border-xena-subtle {
     border-color: #EDE9FE;
   }

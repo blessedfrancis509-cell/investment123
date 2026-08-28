@@ -52,7 +52,7 @@ export const P2PPreview: React.FC<P2PPreviewProps> = ({
                 onClick={() => setTradeType('SELL')}
                 className={`px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${
                   tradeType === 'SELL'
-                    ? 'bg-[#171717] text-white shadow-2xs'
+                    ? 'bg-gradient-to-r from-[#E11D48] to-[#F97316] text-white shadow-sm shadow-rose-200/60'
                     : 'text-[#6B7280] hover:text-[#171717]'
                 }`}
               >
@@ -113,7 +113,7 @@ export const P2PPreview: React.FC<P2PPreviewProps> = ({
               <div className="sm:col-span-3 flex justify-end">
                 <button
                   onClick={() => onSelectOffer(offer)}
-                  className="w-full sm:w-auto py-1.5 px-4 rounded-full font-bold text-xs text-white bg-gradient-to-r from-[#7C3AED] to-[#A855F7] hover:shadow-sm hover:scale-[1.02] transition-all flex items-center justify-center gap-1 cursor-pointer"
+                  className="w-full sm:w-auto py-1.5 px-4 rounded-full font-bold text-xs text-white bg-gradient-to-r from-[#7C3AED] to-[#DB2777] hover:shadow-md hover:shadow-fuchsia-200/50 hover:scale-[1.02] transition-all flex items-center justify-center gap-1 cursor-pointer"
                 >
                   <span>{tradeType === 'BUY' ? 'Buy XENA' : 'Sell XENA'}</span>
                   <ArrowRight className="w-3 h-3" />

@@ -256,42 +256,44 @@ export const MarketPage: React.FC<MarketPageProps> = ({
   return (
     <div className="space-y-3 animate-fade-in" id="market-page-view">
       {/* ===== 1. Compact Ticker Header ===== */}
-      <div className="bg-white border border-[#EDE9FE] rounded-[20px] px-4 sm:px-5 py-3 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+      <div className="bg-gradient-to-br from-[#1E1B4B] via-[#6D28D9] to-[#DB2777] rounded-[20px] px-4 sm:px-5 py-3.5 shadow-lg shadow-purple-200 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-[#F59E0B]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-32 h-32 bg-[#22D3EE]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <XenaTokenBadge size={30} />
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-base font-extrabold text-[#171717] tracking-tight">
-                  XENA<span className="text-[#6B7280] font-normal text-xs">/USD</span>
+                <h1 className="text-base font-extrabold text-white tracking-tight">
+                  XENA<span className="text-purple-200 font-normal text-xs">/USD</span>
                 </h1>
-                <span className="px-1.5 py-0.5 rounded bg-purple-50 text-[#6D28D9] text-[9px] font-bold border border-purple-100">Spot</span>
-                <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-[#16A34A] text-[9px] font-bold border border-emerald-100 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse" /> Live
+                <span className="px-1.5 py-0.5 rounded bg-white/15 text-white text-[9px] font-bold border border-white/30">Spot</span>
+                <span className="px-1.5 py-0.5 rounded bg-white/15 text-emerald-300 text-[9px] font-bold border border-emerald-200/40 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] animate-pulse" /> Live
                 </span>
               </div>
-              <p className="text-[10px] text-[#6B7280]">Xena Network Native Asset</p>
+              <p className="text-[10px] text-purple-200">Xena Network Native Asset</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 divide-x divide-[#EDE9FE]/70">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 divide-x divide-white/15">
             <div className="pr-3">
-              <span className="text-[8px] uppercase font-bold text-[#6B7280] tracking-wider block">Price</span>
-              <span className="text-sm font-extrabold text-[#171717] font-mono leading-none">${marketStats.price.toFixed(4)}</span>
+              <span className="text-[8px] uppercase font-bold text-purple-200 tracking-wider block">Price</span>
+              <span className="text-sm font-extrabold text-white font-mono leading-none">${marketStats.price.toFixed(4)}</span>
             </div>
             <div className="pl-3">
-              <span className="text-[8px] uppercase font-bold text-[#6B7280] tracking-wider block">24h Change</span>
-              <span className="text-xs font-bold text-[#16A34A] flex items-center gap-0.5 font-mono leading-none">
+              <span className="text-[8px] uppercase font-bold text-purple-200 tracking-wider block">24h Change</span>
+              <span className="text-xs font-bold text-emerald-300 flex items-center gap-0.5 font-mono leading-none">
                 <TrendingUp className="w-3 h-3" /> +{marketStats.change24h}%
               </span>
             </div>
             <div className="pl-3">
-              <span className="text-[8px] uppercase font-bold text-[#6B7280] tracking-wider block">24h Range</span>
-              <span className="text-[10px] font-semibold text-[#171717] font-mono leading-none">${marketStats.low24h.toFixed(2)}-{marketStats.high24h.toFixed(2)}</span>
+              <span className="text-[8px] uppercase font-bold text-purple-200 tracking-wider block">24h Range</span>
+              <span className="text-[10px] font-semibold text-white font-mono leading-none">${marketStats.low24h.toFixed(2)}-{marketStats.high24h.toFixed(2)}</span>
             </div>
             <div className="pl-3">
-              <span className="text-[8px] uppercase font-bold text-[#6B7280] tracking-wider block">Volume</span>
-              <span className="text-[10px] font-bold text-[#6D28D9] font-mono leading-none">${(marketStats.volume24hUsdt / 1_000_000).toFixed(2)}M</span>
+              <span className="text-[8px] uppercase font-bold text-purple-200 tracking-wider block">Volume</span>
+              <span className="text-[10px] font-bold text-amber-300 font-mono leading-none">${(marketStats.volume24hUsdt / 1_000_000).toFixed(2)}M</span>
             </div>
           </div>
         </div>
@@ -305,8 +307,8 @@ export const MarketPage: React.FC<MarketPageProps> = ({
           <div className="bg-white border border-[#EDE9FE] rounded-[20px] p-4 shadow-xs">
             <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[#EDE9FE]">
               <div>
-                <h3 className="text-xs font-bold text-[#171717] flex items-center gap-1.5">
-                  <Activity className="w-3.5 h-3.5 text-[#7C3AED]" /> Price Analytics
+                <h3 className="text-xs font-bold flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-[#7C3AED]" /> <span className="text-gradient">Price Analytics</span>
                 </h3>
                 <p className="text-[10px] text-[#6B7280]">Real-time tick data from decentralized liquidity pools</p>
               </div>
@@ -315,7 +317,7 @@ export const MarketPage: React.FC<MarketPageProps> = ({
                   <button
                     key={tf}
                     onClick={() => setTimeframe(tf)}
-                    className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${timeframe === tf ? 'bg-white text-[#6D28D9] shadow-xs' : 'text-[#6B7280] hover:text-[#171717]'}`}
+                    className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${timeframe === tf ? 'bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white shadow-xs' : 'text-[#6B7280] hover:text-[#171717]'}`}
                   >
                     {tf}
                   </button>

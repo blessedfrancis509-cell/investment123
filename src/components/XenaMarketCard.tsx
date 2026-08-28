@@ -71,7 +71,7 @@ export const XenaMarketCard: React.FC<XenaMarketCardProps> = ({
 
       <div className="flex items-baseline justify-between mb-2">
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold text-[#171717]">{currentHoverPrice.toFixed(4)} USDT</span>
+          <span className="text-2xl font-bold text-gradient">{currentHoverPrice.toFixed(4)} USDT</span>
           <span className="text-xs font-semibold text-[#16A34A]">+{marketStats.change24h}%</span>
         </div>
 
@@ -134,16 +134,16 @@ export const XenaMarketCard: React.FC<XenaMarketCardProps> = ({
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={onBuyXena}
-          className="bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white text-xs font-bold py-2.5 rounded-xl hover:opacity-95 transition-all cursor-pointer shadow-sm shadow-purple-100 flex items-center justify-center gap-1.5"
+          className="bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white text-xs font-bold py-2.5 rounded-xl hover:opacity-95 transition-all cursor-pointer shadow-md shadow-fuchsia-200/50 flex items-center justify-center gap-1.5"
         >
           <ShoppingCart className="w-3.5 h-3.5" />
           <span>Buy</span>
         </button>
         <button
           onClick={onSellXena}
-          className="border border-[#EDE9FE] text-[#171717] text-xs font-bold py-2.5 rounded-xl hover:bg-[#F8F7FC] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+          className="border border-[#EDE9FE] text-[#171717] text-xs font-bold py-2.5 rounded-xl hover:bg-sky-50 hover:border-sky-200 transition-all cursor-pointer flex items-center justify-center gap-1.5"
         >
-          <ArrowDownCircle className="w-3.5 h-3.5 text-[#6D28D9]" />
+          <ArrowDownCircle className="w-3.5 h-3.5 text-[#2563EB]" />
           <span>Sell</span>
         </button>
       </div>

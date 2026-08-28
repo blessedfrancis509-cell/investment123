@@ -489,7 +489,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] text-[#171717] flex flex-col font-['Plus_Jakarta_Sans',sans-serif] pb-20 md:pb-0">
+    <div className="min-h-screen bg-gradient-to-b from-white via-[#FAF7FF] to-[#F3EFFF] text-[#171717] flex flex-col font-['Plus_Jakarta_Sans',sans-serif] pb-20 md:pb-0">
       {/* Top Header Navigation */}
       <Header
         activeTab={activeTab}

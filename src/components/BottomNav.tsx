@@ -62,14 +62,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             >
               <div className="relative">
                 <div
-                  className={`p-1 rounded-full transition-colors ${
-                    isActive ? 'bg-purple-100/70 text-[#6D28D9]' : ''
+                  className={`rounded-full transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-to-br from-[#7C3AED] to-[#DB2777] text-white shadow-md shadow-fuchsia-300/50 scale-110'
+                      : 'text-[#6B7280] p-1'
                   }`}
                 >
                   <Icon className="w-5 h-5 stroke-[2.2]" />
                 </div>
                 {isActive && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#6D28D9] rounded-full" />
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#DB2777] rounded-full" />
                 )}
               </div>
               <span

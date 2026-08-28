@@ -45,7 +45,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSucc
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100vh-10rem)] rounded-[24px] overflow-hidden border border-[#EDE9FE] shadow-lg animate-fade-in" id="login-page-view">
       {/* LEFT: Brand Panel */}
-      <div className="relative hidden lg:flex flex-col justify-between bg-gradient-to-br from-[#5B21B6] via-[#6D28D9] to-[#7C3AED] p-10 text-white overflow-hidden">
+      <div className="relative hidden lg:flex flex-col justify-between bg-gradient-to-br from-[#1E1B4B] via-[#7C3AED] to-[#DB2777] p-10 text-white overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -87,7 +87,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSucc
 
       {/* RIGHT: Form */}
       <div className="bg-white p-6 sm:p-10 flex flex-col justify-center">
-        <div className="lg:hidden w-10 h-10 rounded-xl bg-gradient-to-br from-[#5B21B6] to-[#8B5CF6] flex items-center justify-center mb-4">
+        <div className="lg:hidden w-10 h-10 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#DB2777] flex items-center justify-center mb-4">
           <span className="text-white font-bold text-lg leading-none">X</span>
         </div>
 

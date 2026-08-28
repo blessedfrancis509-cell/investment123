@@ -63,6 +63,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
       value: 1450.00,
       change: '+0.01%',
       isNative: false,
+      chipClass: 'bg-teal-50 text-teal-600 border-teal-100',
     },
     {
       symbol: 'SOL',
@@ -73,6 +74,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
       value: 2788.32,
       change: '+8.1%',
       isNative: false,
+      chipClass: 'bg-slate-800 text-white border-slate-700',
     },
   ];
 
@@ -220,7 +222,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
           </div>
           <button
             onClick={onTrade}
-            className="px-3 py-1.5 rounded-lg bg-purple-50 text-[#6D28D9] font-bold text-xs border border-purple-100 hover:bg-purple-100 transition-colors cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white font-bold text-xs hover:opacity-95 transition-all shadow-sm shadow-fuchsia-200/40 cursor-pointer"
           >
             Instant Swap
           </button>
@@ -246,7 +248,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({
                       {asset.isNative ? (
                         <XenaTokenBadge size={28} />
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-purple-50 text-[#6D28D9] font-bold text-xs flex items-center justify-center border border-purple-100">
+                        <div className={`w-7 h-7 rounded-full font-bold text-xs flex items-center justify-center border ${asset.chipClass}`}>
                           {asset.symbol.substring(0, 3)}
                         </div>
                       )}

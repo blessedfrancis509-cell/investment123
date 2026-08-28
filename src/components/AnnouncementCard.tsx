@@ -11,7 +11,7 @@ export const AnnouncementCard: React.FC<AnnouncementCardProps> = ({ onExploreP2P
     <section className="py-2" id="announcement-card-section">
       <div className="bg-white border border-[#EDE9FE] p-6 rounded-[24px] flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden shadow-sm">
         <div className="max-w-md w-full">
-          <span className="inline-block text-xs font-bold text-[#6D28D9] bg-[#F8F7FC] border border-[#EDE9FE] px-3 py-1 rounded-full mb-2">
+          <span className="inline-block text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full mb-2">
             ✨ New on Xena
           </span>
           <h3 className="text-lg font-bold text-[#171717] mb-1">
@@ -22,7 +22,7 @@ export const AnnouncementCard: React.FC<AnnouncementCardProps> = ({ onExploreP2P
           </p>
           <button
             onClick={onExploreP2P}
-            className="bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white text-xs font-bold px-5 py-2.5 rounded-full flex items-center gap-1.5 hover:opacity-95 hover:scale-[1.02] transition-all cursor-pointer shadow-md shadow-purple-200"
+            className="bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white text-xs font-bold px-5 py-2.5 rounded-full flex items-center gap-1.5 hover:opacity-95 hover:scale-[1.02] transition-all cursor-pointer shadow-md shadow-fuchsia-200/60"
           >
             <span>Explore P2P</span>
             <ArrowRight className="w-3.5 h-3.5" />

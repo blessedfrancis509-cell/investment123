@@ -87,7 +87,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
 
               <div className="text-right">
-                <span className="text-sm font-bold text-[#171717] font-mono block">
+                <span className="text-sm font-bold text-gradient font-mono block">
                   ${marketStats.price.toFixed(4)}
                 </span>
                 <span className="text-xs font-bold text-[#16A34A] flex items-center justify-end gap-1">
@@ -98,17 +98,17 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
 
             <div className="grid grid-cols-3 gap-2 my-3">
-              <div className="p-2.5 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE] text-center">
-                <span className="text-[10px] text-[#6B7280] block">24h High</span>
-                <span className="text-xs font-bold text-[#171717] font-mono">${marketStats.high24h.toFixed(2)}</span>
+              <div className="p-2.5 bg-sky-50/70 rounded-xl border border-sky-100 text-center hover:bg-sky-50 transition-colors">
+                <span className="text-[10px] text-sky-600 font-semibold block">24h High</span>
+                <span className="text-xs font-bold text-sky-800 font-mono">${marketStats.high24h.toFixed(2)}</span>
               </div>
-              <div className="p-2.5 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE] text-center">
-                <span className="text-[10px] text-[#6B7280] block">24h Low</span>
-                <span className="text-xs font-bold text-[#171717] font-mono">${marketStats.low24h.toFixed(2)}</span>
+              <div className="p-2.5 bg-amber-50/70 rounded-xl border border-amber-100 text-center hover:bg-amber-50 transition-colors">
+                <span className="text-[10px] text-amber-600 font-semibold block">24h Low</span>
+                <span className="text-xs font-bold text-amber-800 font-mono">${marketStats.low24h.toFixed(2)}</span>
               </div>
-              <div className="p-2.5 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE] text-center">
-                <span className="text-[10px] text-[#6B7280] block">24h Volume</span>
-                <span className="text-xs font-bold text-[#171717] font-mono">${(marketStats.volume24hUsdt / 1_000_000).toFixed(1)}M</span>
+              <div className="p-2.5 bg-purple-50/70 rounded-xl border border-purple-100 text-center hover:bg-purple-50 transition-colors">
+                <span className="text-[10px] text-purple-600 font-semibold block">24h Volume</span>
+                <span className="text-xs font-bold text-purple-800 font-mono">${(marketStats.volume24hUsdt / 1_000_000).toFixed(1)}M</span>
               </div>
             </div>
 

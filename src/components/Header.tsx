@@ -49,10 +49,10 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-2 text-left focus:outline-none cursor-pointer"
               aria-label="Xena Home"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#5B21B6] to-[#8B5CF6] flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#DB2777] flex items-center justify-center shadow-md shadow-fuchsia-300/50">
                 <span className="text-white font-bold text-lg leading-none">X</span>
               </div>
-              <span className="font-bold text-xl tracking-tight text-[#171717]">XENA</span>
+              <span className="font-bold text-xl tracking-tight text-gradient">XENA</span>
             </button>
 
             {/* Desktop Navigation */}

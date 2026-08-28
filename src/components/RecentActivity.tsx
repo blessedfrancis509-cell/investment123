@@ -103,7 +103,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ transactions, on
                   onClick={() => setFilterType(tab.id)}
                   className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
                     filterType === tab.id
-                      ? 'bg-white text-[#6D28D9] shadow-2xs font-bold'
+                      ? 'bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white shadow-sm shadow-fuchsia-200/60 font-bold'
                       : 'text-[#6B7280] hover:text-[#171717]'
                   }`}
                 >
