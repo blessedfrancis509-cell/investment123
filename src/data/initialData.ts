@@ -16,11 +16,11 @@ export const INITIAL_BALANCES: UserBalances = {
   usdRate: 1.0, // 1 XENA ≈ $1.00 USD (or pegged / calculated dynamically)
   change24hAmount: 320.50,
   change24hPercent: 12.65,
-  availableXena: 1240.50,
-  investedXena: 1610.00,
+  availableXena: 2850.50,
+  investedXena: 0.00,
   averageBuyPrice: 2.1500,
   currentPrice: 2.8500,
-  stakedXena: 500.00,
+  stakedXena: 0.00,
   lockedInOrders: 0.00,
   nairaBalance: 2450000.00,
   xenaNgnRate: 4275.00,
@@ -108,68 +108,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
   }
 ];
 
-export const INITIAL_INVESTMENT_PLANS: InvestmentPlan[] = [
-  {
-    id: 'inv-2wk-01',
-    name: '2-Week Sprint Vault',
-    category: 'Fixed Term',
-    investedAmount: 750.00,
-    projectedReturnPercent: 26.5,
-    earnedAmount: 38.20,
-    progressPercent: 57,
-    daysRemaining: 6,
-    totalDays: 14,
-    startDate: '2026-08-19',
-    endDate: '2026-09-02',
-    status: 'Active',
-    dailyYieldXena: 1.42,
-  },
-  {
-    id: 'inv-growth-01',
-    name: 'Growth Plan',
-    category: 'Growth',
-    investedAmount: 1000.00,
-    projectedReturnPercent: 12.0,
-    earnedAmount: 120.00,
-    progressPercent: 68,
-    daysRemaining: 18,
-    totalDays: 60,
-    startDate: '2026-07-15',
-    endDate: '2026-09-15',
-    status: 'Active',
-    dailyYieldXena: 2.00,
-  },
-  {
-    id: 'inv-stake-02',
-    name: 'XENA Validator Staking',
-    category: 'Staking',
-    investedAmount: 500.00,
-    projectedReturnPercent: 16.5,
-    earnedAmount: 41.25,
-    progressPercent: 45,
-    daysRemaining: 42,
-    totalDays: 90,
-    startDate: '2026-07-01',
-    endDate: '2026-09-30',
-    status: 'Active',
-    dailyYieldXena: 1.38,
-  },
-  {
-    id: 'inv-flex-03',
-    name: 'Flexible High-Yield Vault',
-    category: 'Flexible',
-    investedAmount: 110.00,
-    projectedReturnPercent: 8.2,
-    earnedAmount: 9.02,
-    progressPercent: 92,
-    daysRemaining: 3,
-    totalDays: 30,
-    startDate: '2026-08-01',
-    endDate: '2026-08-31',
-    status: 'Active',
-    dailyYieldXena: 0.25,
-  }
-];
+export const INITIAL_INVESTMENT_PLANS: InvestmentPlan[] = [];
 
 export const INITIAL_P2P_OFFERS: P2POffer[] = [
   {
