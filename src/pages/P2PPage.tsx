@@ -465,6 +465,7 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
                 {verifiedOnly ? 'Verified Pro Only' : 'Verified Only'}
               </button>
             </div>
+          </div>
 
           {/* Offers table / cards */}
           <div className="bg-white border border-[#EDE9FE] rounded-[20px] shadow-xs overflow-hidden">

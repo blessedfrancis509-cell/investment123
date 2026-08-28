@@ -59,6 +59,100 @@ interface ProfilePageProps {
   onSelectTab: (tab: string) => void;
 }
 
+type ProfileRowProps = {
+  icon: React.ElementType;
+  label: string;
+  hint?: string;
+  indicator?: React.ReactNode;
+  trailing?: React.ReactNode;
+  chevron?: boolean;
+  danger?: boolean;
+  onClick?: () => void;
+  iconTone?: string;
+};
+
+const ProfileRow: React.FC<ProfileRowProps> = ({
+  icon: Icon,
+  label,
+  hint,
+  indicator,
+  trailing,
+  chevron = true,
+  danger,
+  onClick,
+  iconTone = 'bg-[#6D28D9]/10 text-[#6D28D9]',
+}) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer group ${
+      danger ? 'text-[#E11D48]' : 'text-[#171717]'
+    }`}
+  >
+    <span className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center ${iconTone}`}>
+      <Icon className="w-4 h-4" />
+    </span>
+    <span className="flex-1 min-w-0">
+      <span className={`block text-[13px] font-bold leading-tight ${danger ? 'text-[#E11D48]' : 'text-[#171717]'}`}>{label}</span>
+      {hint && <span className="block text-[11px] text-[#9CA3AF] mt-0.5 truncate">{hint}</span>}
+    </span>
+    {indicator && <span className="shrink-0">{indicator}</span>}
+    {trailing}
+    {chevron && !danger && !trailing && (
+      <ChevronRight className="w-4 h-4 text-[#CBD5E1] shrink-0 group-hover:text-[#6D28D9] transition-colors" />
+    )}
+  </button>
+);
+
+const ProfileSection: React.FC<{ title?: string; children: React.ReactNode }> = ({ title, children }) => (
+  <div>
+    {title && (
+      <h3 className="px-1 mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#9CA3AF]">{title}</h3>
+    )}
+    <div className="bg-white border border-[#EDE9FE] rounded-[16px] shadow-sm divide-y divide-[#F1EDF9] overflow-hidden">
+      {children}
+    </div>
+  </div>
+);
+
+const PrefToggle: React.FC<{ label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }> = ({
+  label,
+  hint,
+  checked,
+  onChange,
+}) => (
+  <div className="px-4 py-3 flex items-center gap-3">
+    <span className="w-9 h-9 shrink-0 rounded-xl bg-[#6D28D9]/10 text-[#6D28D9] flex items-center justify-center">
+      <Bell className="w-4 h-4" />
+    </span>
+    <div className="flex-1 min-w-0">
+      <span className="block text-[13px] font-bold text-[#171717]">{label}</span>
+      {hint && <span className="block text-[11px] text-[#9CA3AF] truncate">{hint}</span>}
+    </div>
+    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="sr-only" />
+      <span className={`w-11 h-6 rounded-full transition-colors ${checked ? 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7]' : 'bg-[#E5E0EE]'}`}>
+        <span className={`block w-5 h-5 bg-white rounded-full shadow transform transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
+      </span>
+    </label>
+  </div>
+);
+
+const StatusChip: React.FC<{ tone: 'green' | 'red' | 'amber' | 'purple' | 'slate'; children: React.ReactNode }> = ({
+  tone,
+  children,
+}) => {
+  const tones: Record<string, string> = {
+    green: 'bg-emerald-50 text-[#16A34A] border-emerald-100',
+    red: 'bg-rose-50 text-[#E11D48] border-rose-100',
+    amber: 'bg-amber-50 text-amber-600 border-amber-100',
+    purple: 'bg-[#7C3AED]/10 text-[#6D28D9] border-[#7C3AED]/15',
+    slate: 'bg-slate-50 text-slate-600 border-slate-100',
+  };
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${tones[tone]}`}>{children}</span>
+  );
+};
+
 export const ProfilePage: React.FC<ProfilePageProps> = ({
   user,
   balances,
@@ -577,524 +671,276 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
       {/* TAB A: OVERVIEW */}
       {activeSubTab === 'overview' && (
-        <div className="space-y-6 animate-fade-in">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* KYC & Identity Limits Card */}
-            <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#EDE9FE]">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#6D28D9] flex items-center justify-center">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-sm font-bold text-[#171717]">Identity & KYC Level</h3>
-                </div>
-                <button
-                  onClick={() => setActiveSubTab('kyc')}
-                  className="px-2 py-0.5 rounded-full bg-emerald-50 text-[#16A34A] text-xs font-bold border border-emerald-100 hover:bg-emerald-100 cursor-pointer"
-                >
-                  {currentKycTier}
-                </button>
-              </div>
+        <div className="space-y-4 animate-fade-in">
+          <ProfileSection title="Identity & KYC Level">
+            <ProfileRow
+              icon={ShieldCheck}
+              label="Daily Withdrawal Limit"
+              trailing={
+                <span className="font-mono text-xs font-bold text-[#171717]">
+                  {currentKycTier === 'Tier 3 (Institutional)' ? 'Unlimited / 24h' : '$100,000 / 24h'}
+                </span>
+              }
+              chevron={false}
+              onClick={() => setActiveSubTab('kyc')}
+            />
+            <ProfileRow
+              icon={Shield}
+              label="Crypto Deposit Limits"
+              trailing={<StatusChip tone="green">Unlimited</StatusChip>}
+              chevron={false}
+            />
+            <ProfileRow
+              icon={ArrowRightLeft}
+              label="P2P Trading Access"
+              trailing={<StatusChip tone="green">Active & Verified</StatusChip>}
+              chevron={false}
+            />
+            <ProfileRow
+              icon={CheckCircle2}
+              label="Government ID Status"
+              trailing={<StatusChip tone="green">Approved</StatusChip>}
+              chevron={false}
+            />
+          </ProfileSection>
 
-              <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-[#6B7280]">Daily Withdrawal Limit:</span>
-                  <span className="font-bold text-[#171717] font-mono">
-                    {currentKycTier === 'Tier 3 (Institutional)' ? 'Unlimited USD / 24h' : '$100,000 USD / 24h'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#6B7280]">Crypto Deposit Limits:</span>
-                  <span className="font-bold text-[#16A34A]">Unlimited</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#6B7280]">P2P Trading Access:</span>
-                  <span className="font-bold text-[#16A34A]">Active & Verified</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#6B7280]">Government ID Status:</span>
-                  <span className="font-bold text-[#171717]">Passport & Liveness (Approved)</span>
-                </div>
-              </div>
-            </div>
+          <ProfileSection title="Balance & Funds">
+            <ProfileRow
+              icon={Wallet}
+              label="Spot Liquid Funds"
+              trailing={<span className="font-mono text-xs font-bold text-[#171717]">${spotFiat.toFixed(2)}</span>}
+              chevron={false}
+            />
+            <ProfileRow
+              icon={TrendingUp}
+              label="Staked In Yield Vaults"
+              trailing={<span className="font-mono text-xs font-bold text-[#6D28D9]">${investedFiat.toFixed(2)}</span>}
+              chevron={false}
+            />
+            <ProfileRow
+              icon={Layers}
+              label="Active Staking Plans"
+              trailing={<StatusChip tone="green">4 Plans</StatusChip>}
+              chevron={false}
+            />
+            <ProfileRow
+              icon={DollarSign}
+              label="XENA Unit Price"
+              trailing={<span className="font-mono text-xs font-bold text-[#171717]">${balances.currentPrice.toFixed(4)}</span>}
+              chevron={false}
+            />
+          </ProfileSection>
 
-            {/* Quick Balance Breakdown Card */}
-            <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#EDE9FE]">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#6D28D9] flex items-center justify-center">
-                    <Wallet className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-sm font-bold text-[#171717]">Balance Distribution</h3>
-                </div>
-                <button
-                  onClick={() => setActiveSubTab('wallet')}
-                  className="text-xs font-bold text-[#6D28D9] hover:underline cursor-pointer"
-                >
-                  Manage
-                </button>
-              </div>
+          <ProfileSection title="Quick Shortcuts">
+            <ProfileRow icon={ArrowDownRight} label="Deposit Funds" hint="Top up your spot balance" onClick={onOpenDeposit} />
+            <ProfileRow icon={ArrowUpRight} label="Withdraw Funds" hint="Send to external wallet" onClick={onOpenWithdraw} />
+            <ProfileRow icon={Share2} label="Invite Friends & Earn 20%" hint="Grow your network" onClick={() => setActiveSubTab('referrals')} iconTone="bg-fuchsia-50 text-[#DB2777]" />
+          </ProfileSection>
 
-              <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-[#6B7280]">Spot Liquid Funds:</span>
-                  <span className="font-bold text-[#171717] font-mono">${spotFiat.toFixed(2)} USD</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#6B7280]">Staked In Yield Vaults:</span>
-                  <span className="font-bold text-[#6D28D9] font-mono">${investedFiat.toFixed(2)} USD</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#6B7280]">Active Staking Plans:</span>
-                  <span className="font-bold text-[#16A34A]">4 Plans Active</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#6B7280]">XENA Unit Price:</span>
-                  <span className="font-bold text-[#171717] font-mono">${balances.currentPrice.toFixed(4)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Account Quick Actions */}
-            <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 shadow-sm space-y-3 flex flex-col justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-[#171717] mb-1">Quick Shortcuts</h3>
-                <p className="text-xs text-[#6B7280] mb-3">Instant access to primary account operations</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={onOpenDeposit}
-                    className="py-2.5 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#6D28D9] text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <ArrowDownRight className="w-3.5 h-3.5" />
-                    <span>Deposit</span>
-                  </button>
-                  <button
-                    onClick={onOpenWithdraw}
-                    className="py-2.5 px-3 rounded-xl bg-[#F8F7FC] hover:bg-[#EDE9FE] text-[#171717] text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                    <span>Withdraw</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveSubTab('referrals')}
-                    className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-opacity hover:opacity-90 col-span-2 cursor-pointer shadow-xs"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    <span>Invite Friends & Earn 20%</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Account Completion & Security Checklist */}
-          <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 sm:p-6 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EDE9FE]">
-              <div>
-                <h3 className="text-sm font-bold text-[#171717] flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#6D28D9]" /> Account Completion & Security Checklist
-                </h3>
-                <p className="text-xs text-[#6B7280] mt-0.5">Strengthen your account to unlock higher limits and faster withdrawals</p>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="w-11 h-11 rounded-full bg-purple-50 border-2 border-[#7C3AED] flex items-center justify-center text-[#6D28D9] font-extrabold text-xs font-mono">
-                  {completionPct}%
-                </div>
-                <div className="w-28">
-                  <div className="h-1.5 bg-[#F8F7FC] rounded-full overflow-hidden border border-[#EDE9FE]">
-                    <div className="h-full bg-gradient-to-r from-[#7C3AED] to-[#A855F7] rounded-full transition-all" style={{ width: `${completionPct}%` }} />
-                  </div>
-                  <span className="text-[10px] text-[#6B7280] font-semibold">
-                    {completionItems.filter((i) => i.done).length}/{completionItems.length} completed
-                  </span>
-                </div>
-                {completionPct < 100 && (
-                  <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">
-                    {completionItems.length - completionItems.filter((i) => i.done).length} to go
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-4">
-              {completionItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.label}
-                    onClick={() => setActiveSubTab(item.tab)}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all cursor-pointer text-left ${
-                      item.done
-                        ? 'bg-[#F8F7FC] border-[#EDE9FE] hover:border-emerald-200'
-                        : 'bg-amber-50/40 border-dashed border-amber-300/70 hover:bg-amber-50'
-                    }`}
-                  >
-                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                      item.done ? 'bg-emerald-50 text-[#16A34A] border border-emerald-100' : 'bg-white text-amber-500 border border-amber-200'
-                    }`}>
-                      {item.done ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : <Icon className="w-3.5 h-3.5" />}
-                    </span>
-                    <span className={`text-[11px] font-bold flex-1 ${item.done ? 'text-[#6B7280] line-through decoration-[#9CA3AF]/50' : 'text-[#171717]'}`}>
-                      {item.label}
-                    </span>
-                    <ChevronRight className="w-3 h-3 text-[#9CA3AF]" />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <ProfileSection title={`Account Completion · ${completionPct}%`}>
+            {completionItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <ProfileRow
+                  key={item.label}
+                  icon={item.done ? Check : Icon}
+                  label={item.label}
+                  iconTone={item.done ? 'bg-emerald-50 text-[#16A34A]' : 'bg-amber-50 text-amber-500'}
+                  chevron={false}
+                  trailing={
+                    item.done ? (
+                      <StatusChip tone="green">Done</StatusChip>
+                    ) : (
+                      <StatusChip tone="amber">Pending</StatusChip>
+                    )
+                  }
+                  onClick={() => setActiveSubTab(item.tab)}
+                />
+              );
+            })}
+          </ProfileSection>
         </div>
       )}
 
       {/* TAB B: SECURITY MENU */}
       {activeSubTab === 'security' && (
-        <div className="space-y-6 animate-fade-in">
-          {/* Security Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* 2FA Authenticator */}
-            <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 shadow-sm space-y-4 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-purple-50 text-[#6D28D9] flex items-center justify-center">
-                      <Smartphone className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-[#171717]">Two-Factor Authentication (2FA)</h3>
-                      <p className="text-xs text-[#6B7280]">Google Authenticator / Authy / TOTP App</p>
-                    </div>
-                  </div>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                      twoFactor ? 'bg-emerald-50 text-[#16A34A] border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'
-                    }`}
-                  >
-                    {twoFactor ? 'Active' : 'Disabled'}
-                  </span>
-                </div>
-                <p className="text-xs text-[#6B7280] leading-relaxed">
-                  Mandatory for all crypto withdrawals, P2P release confirmations, and sensitive account modifications.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-[#EDE9FE] flex items-center justify-between">
-                <span className="text-xs text-[#6B7280]">Protection Status: {twoFactor ? 'Enforced' : 'Off'}</span>
+        <div className="space-y-4 animate-fade-in">
+          <ProfileSection title="Authentication">
+            <ProfileRow
+              icon={Smartphone}
+              label="Two-Factor Authentication (2FA)"
+              hint="Google Authenticator / Authy / TOTP App"
+              chevron={false}
+              indicator={
+                twoFactor ? <StatusChip tone="green">Enforced</StatusChip> : <StatusChip tone="red">Off</StatusChip>
+              }
+              trailing={
                 <button
                   onClick={handleToggle2FA}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-extrabold transition-colors cursor-pointer ${
                     twoFactor
-                      ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                      : 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white hover:opacity-90 shadow-xs'
+                      ? 'bg-rose-50 text-[#E11D48] border border-rose-100 hover:bg-rose-100'
+                      : 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white shadow-xs hover:opacity-90'
                   }`}
                 >
-                  {twoFactor ? 'Disable 2FA' : 'Enable 2FA Protection'}
+                  {twoFactor ? 'Disable' : 'Enable'}
                 </button>
-              </div>
-            </div>
-
-            {/* 6-Digit PIN */}
-            <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 shadow-sm space-y-4 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-purple-50 text-[#6D28D9] flex items-center justify-center">
-                      <Lock className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-[#171717]">Quick Trading & Withdrawal PIN</h3>
-                      <p className="text-xs text-[#6B7280]">Biometric & 6-digit cryptographic passcode</p>
-                    </div>
-                  </div>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                      pinSet ? 'bg-emerald-50 text-[#16A34A] border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
-                    }`}
-                  >
-                    {pinSet ? 'Configured' : 'Not Set'}
-                  </span>
-                </div>
-                <p className="text-xs text-[#6B7280] leading-relaxed">
-                  Used for rapid authorization on mobile devices without requiring repetitive email OTP codes.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-[#EDE9FE] flex items-center justify-between">
-                <span className="text-xs text-[#6B7280]">Hardware PIN: {pinSet ? 'Active' : 'Unset'}</span>
+              }
+            />
+            <ProfileRow
+              icon={Lock}
+              label="Quick Trading & Withdrawal PIN"
+              hint="Biometric & 6-digit cryptographic passcode"
+              chevron={false}
+              indicator={
+                pinSet ? <StatusChip tone="green">Configured</StatusChip> : <StatusChip tone="amber">Not Set</StatusChip>
+              }
+              trailing={
                 <button
                   onClick={handleTogglePIN}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#F8F7FC] hover:bg-[#EDE9FE] text-[#171717] border border-[#EDE9FE] transition-colors cursor-pointer"
+                  className="shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-extrabold bg-[#F8F7FC] text-[#171717] border border-[#EDE9FE] hover:bg-[#EDE9FE] transition-colors cursor-pointer"
                 >
-                  {pinSet ? 'Change PIN' : 'Setup 6-Digit PIN'}
+                  {pinSet ? 'Change PIN' : 'Setup PIN'}
                 </button>
-              </div>
-            </div>
-
-            {/* Anti-Phishing Security Phrase */}
-            <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-purple-50 text-[#6D28D9] flex items-center justify-center">
-                    <Key className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[#171717]">Anti-Phishing Anti-Spoof Code</h3>
-                    <p className="text-xs text-[#6B7280]">Embedded in all official XENA system emails</p>
-                  </div>
-                </div>
-              </div>
-
-              <p className="text-xs text-[#6B7280]">
-                Current Anti-Phishing Code: <strong className="text-[#6D28D9] font-mono bg-purple-50 px-2 py-0.5 rounded border border-purple-100">{antiPhishingCode}</strong>
-              </p>
-
-              {isEditingCode ? (
-                <form onSubmit={handleSaveAntiPhishing} className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Enter new code..."
-                    value={newCode}
-                    onChange={(e) => setNewCode(e.target.value)}
-                    className="flex-1 bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl px-3 py-1.5 text-xs text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#6D28D9]"
-                  />
+              }
+            />
+            <ProfileRow
+              icon={Key}
+              label="Anti-Phishing Anti-Spoof Code"
+              hint={`Current code: ${antiPhishingCode}`}
+              chevron={false}
+              trailing={
+                isEditingCode ? (
+                  <form onSubmit={handleSaveAntiPhishing} className="flex items-center gap-1.5 shrink-0">
+                    <input
+                      type="text"
+                      placeholder="New code..."
+                      value={newCode}
+                      onChange={(e) => setNewCode(e.target.value)}
+                      className="w-28 bg-[#F8F7FC] border border-[#EDE9FE] rounded-lg px-2 py-1.5 text-[11px] text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#6D28D9]"
+                    />
+                    <button type="submit" className="px-2.5 py-1.5 rounded-lg bg-[#6D28D9] text-white text-[11px] font-bold cursor-pointer">Save</button>
+                    <button type="button" onClick={() => setIsEditingCode(false)} className="px-2 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-bold cursor-pointer">X</button>
+                  </form>
+                ) : (
                   <button
-                    type="submit"
-                    className="px-4 py-1.5 rounded-xl bg-[#6D28D9] text-white text-xs font-bold cursor-pointer"
+                    onClick={() => setIsEditingCode(true)}
+                    className="shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-extrabold bg-[#F8F7FC] text-[#171717] border border-[#EDE9FE] hover:bg-[#EDE9FE] transition-colors cursor-pointer"
                   >
-                    Save
+                    Update
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingCode(false)}
-                    className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </form>
-              ) : (
-                <button
-                  onClick={() => setIsEditingCode(true)}
-                  className="px-4 py-2 rounded-xl bg-[#F8F7FC] hover:bg-[#EDE9FE] text-[#171717] text-xs font-bold border border-[#EDE9FE] cursor-pointer"
-                >
-                  Update Phrase
-                </button>
-              )}
-            </div>
-
-            {/* Strict Whitelist Only Policy */}
-            <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 shadow-sm space-y-4 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-purple-50 text-[#6D28D9] flex items-center justify-center">
-                      <Shield className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-[#171717]">Strict Address Whitelist Mode</h3>
-                      <p className="text-xs text-[#6B7280]">Block withdrawals to unregistered addresses</p>
-                    </div>
-                  </div>
+                )
+              }
+            />
+            <ProfileRow
+              icon={Shield}
+              label="Strict Address Whitelist Mode"
+              hint="Block withdrawals to unregistered addresses"
+              chevron={false}
+              trailing={
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
                   <input
                     type="checkbox"
                     checked={strictWhitelistOnly}
                     onChange={(e) => setStrictWhitelistOnly(e.target.checked)}
-                    className="w-5 h-5 accent-[#6D28D9] cursor-pointer"
+                    className="sr-only"
                   />
-                </div>
-                <p className="text-xs text-[#6B7280]">
-                  When active, withdrawals can ONLY be dispatched to addresses previously saved and locked in your Address Book.
-                </p>
-              </div>
+                  <span className={`w-11 h-6 rounded-full transition-colors ${strictWhitelistOnly ? 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7]' : 'bg-[#E5E0EE]'}`}>
+                    <span className={`block w-5 h-5 bg-white rounded-full shadow transform transition-transform ${strictWhitelistOnly ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </span>
+                </label>
+              }
+            />
+          </ProfileSection>
 
-              <div className="pt-3 border-t border-[#EDE9FE] text-xs text-[#16A34A] font-semibold flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5" />
-                <span>24-hour cooling period enforced for new addresses</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Active Logged-in Devices & Sessions */}
-          <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 sm:p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#EDE9FE]">
-              <div>
-                <h3 className="text-sm font-bold text-[#171717]">Active Login Sessions & Devices</h3>
-                <p className="text-xs text-[#6B7280]">Devices currently authorized to access your XENA account</p>
-              </div>
-              <button
-                onClick={() => {
-                  setSessions((prev) => prev.filter((s) => s.current));
-                  setSavedNotice('All other background sessions have been logged out.');
-                  setTimeout(() => setSavedNotice(null), 3000);
-                }}
-                className="px-3 py-1.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 text-xs font-bold transition-colors cursor-pointer"
-              >
-                Revoke All Others
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {sessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE] gap-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-white text-[#6D28D9] border border-[#EDE9FE] flex items-center justify-center">
-                      <Globe className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[#171717]">{session.device}</span>
-                        {session.current && (
-                          <span className="text-[10px] font-bold text-[#16A34A] bg-emerald-50 px-2 py-0.2 rounded-full border border-emerald-100">
-                            Current
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-[#6B7280]">
-                        IP: {session.ip} • Location: {session.location}
-                      </div>
-                    </div>
-                  </div>
-
-                  {!session.current && (
+          <ProfileSection title={`Active Login Sessions · ${sessions.length}`}>
+            {sessions.map((session) => (
+              <ProfileRow
+                key={session.id}
+                icon={Globe}
+                label={session.device}
+                hint={`IP: ${session.ip} · ${session.location}`}
+                chevron={false}
+                indicator={
+                  session.current ? <StatusChip tone="green">Current</StatusChip> : undefined
+                }
+                trailing={
+                  !session.current ? (
                     <button
                       onClick={() => handleRevokeSession(session.id)}
-                      className="self-end sm:self-auto px-3 py-1 rounded-lg text-xs font-bold text-red-600 bg-white hover:bg-red-50 border border-red-100 transition-colors cursor-pointer"
+                      className="shrink-0 px-3 py-1 rounded-lg text-[11px] font-bold text-[#E11D48] border border-rose-100 hover:bg-rose-50 transition-colors cursor-pointer"
                     >
                       Revoke
                     </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+                  ) : undefined
+                }
+              />
+            ))}
+            <button
+              onClick={() => {
+                setSessions((prev) => prev.filter((s) => s.current));
+                setSavedNotice('All other background sessions have been logged out.');
+                setTimeout(() => setSavedNotice(null), 3000);
+              }}
+              className="w-full py-3 text-[11px] font-extrabold text-[#E11D48] hover:bg-rose-50 transition-colors cursor-pointer"
+            >
+              Revoke All Other Sessions
+            </button>
+          </ProfileSection>
         </div>
       )}
 
       {/* TAB C: API KEYS & TRADING BOTS */}
       {activeSubTab === 'api' && (
-        <div className="space-y-6 animate-fade-in">
-          {/* Header Banner */}
-          <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#7C3AED] to-[#A855F7] text-white flex items-center justify-center shadow-sm">
-                <KeyRound className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-extrabold text-[#171717]">API Key Management</h3>
-                <p className="text-xs text-[#6B7280]">Connect trading bots, portfolio trackers, and institutional systems securely.</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowCreateApiModal(true)}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white font-bold text-xs hover:shadow-[0_4px_16px_rgba(109,40,217,0.3)] transition-all flex items-center gap-2 cursor-pointer self-start sm:self-auto"
-            >
-              <Plus className="w-4 h-4" /> Create API Key
-            </button>
-          </div>
+        <div className="space-y-4 animate-fade-in">
+          <button
+            onClick={() => setShowCreateApiModal(true)}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-[16px] bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white shadow-sm hover:shadow-md transition-all cursor-pointer"
+          >
+            <span className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <Plus className="w-4 h-4" />
+            </span>
+            <span className="flex-1 text-left">
+              <span className="block text-[13px] font-extrabold">Create API Key</span>
+              <span className="block text-[11px] opacity-80">Connect trading bots & institutional systems</span>
+            </span>
+            <ChevronRight className="w-4 h-4 opacity-80" />
+          </button>
 
-          {/* API Keys List */}
-          <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 sm:p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#EDE9FE]">
-              <div>
-                <h3 className="text-sm font-bold text-[#171717]">Your API Keys</h3>
-                <p className="text-xs text-[#6B7280]">{apiKeys.length} active key{apiKeys.length !== 1 ? 's' : ''} registered</p>
-              </div>
-              <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#16A34A] bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                <ShieldCheck className="w-3.5 h-3.5" /> 2FA Required for Creation
-              </span>
-            </div>
-
+          <ProfileSection title={`Your API Keys · ${apiKeys.length}`}>
             {apiKeys.length === 0 && (
-              <div className="p-8 text-center text-xs text-[#6B7280] bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE]">
-                <KeyRound className="w-8 h-8 text-[#9CA3AF] mx-auto mb-2" />
-                No API keys yet. Create your first key to automate trading or sync your portfolio.
+              <div className="px-4 py-8 text-center text-xs text-[#9CA3AF]">
+                <KeyRound className="w-8 h-8 text-[#D1C9E3] mx-auto mb-2" />
+                No API keys yet. Create your first key to automate trading.
               </div>
             )}
-
-            <div className="grid grid-cols-1 gap-3">
-              {apiKeys.map((key) => (
-                <div
-                  key={key.id}
-                  className="p-4 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE] space-y-3"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl ${key.enabled ? 'bg-purple-50 text-[#6D28D9]' : 'bg-slate-100 text-slate-400'} flex items-center justify-center border ${key.enabled ? 'border-purple-100' : 'border-[#EDE9FE]'}`}>
-                        <Wrench className="w-4 h-4" />
+            {apiKeys.map((key) => {
+              const revealed = revealedSecretId === key.id;
+              return (
+                <div key={key.id} className="px-4 py-3 divide-y divide-[#F1EDF9]">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center border ${key.enabled ? 'bg-purple-50 text-[#6D28D9] border-purple-100' : 'bg-slate-100 text-slate-400 border-[#EDE9FE]'}`}>
+                      <Wrench className="w-4 h-4" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[13px] font-bold text-[#171717]">{key.name}</span>
+                        {key.enabled ? <StatusChip tone="green">Enabled</StatusChip> : <StatusChip tone="slate">Disabled</StatusChip>}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-bold text-[#171717]">{key.name}</span>
-                          <span className={`px-2 py-0.3 rounded-full text-[10px] font-bold ${
-                            key.enabled ? 'bg-emerald-50 text-[#16A34A] border border-emerald-100' : 'bg-slate-100 text-[#6B7280] border border-[#EDE9FE]'
-                          }`}>
-                            {key.enabled ? 'Enabled' : 'Disabled'}
-                          </span>
-                        </div>
-                        <span className="text-[11px] text-[#6B7280] font-mono">Access Key: <strong className="text-[#171717]">{key.accessKey}</strong></span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
-                      <button
-                        onClick={() => {
-                          if (revealedSecretId === key.id) {
-                            setRevealedSecretId(null);
-                          } else {
-                            setRevealedSecretId(key.id);
-                            setSavedNotice('API secret revealed. Never share this value with anyone.');
-                            setTimeout(() => setSavedNotice(null), 3000);
-                          }
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
-                          revealedSecretId === key.id
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                            : 'bg-white text-[#6B7280] border border-[#EDE9FE] hover:text-[#171717]'
-                        }`}
-                      >
-                        {revealedSecretId === key.id ? 'Hide Secret' : 'View Secret'}
-                      </button>
-                      <button
-                        onClick={() => handleCopyText(key.accessKey, `key-${key.id}`)}
-                        className="p-2 rounded-lg bg-white text-[#6D28D9] border border-[#EDE9FE] hover:bg-purple-50 transition-colors cursor-pointer"
-                        title="Copy Access Key"
-                      >
-                        {copiedAddressId === `key-${key.id}` ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                      <button
-                        onClick={() => handleToggleApiKey(key.id)}
-                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
-                          key.enabled
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
-                            : 'bg-emerald-50 text-[#16A34A] border border-emerald-100 hover:bg-emerald-100'
-                        }`}
-                      >
-                        <Power className="w-3 h-3" /> {key.enabled ? 'Disable' : 'Enable'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteApiKey(key.id)}
-                        className="p-2 rounded-lg bg-white text-red-600 border border-red-100 hover:bg-red-50 transition-colors cursor-pointer"
-                        title="Delete API Key"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <span className="text-[11px] text-[#6B7280] font-mono">Access Key: <strong className="text-[#171717]">{key.accessKey}</strong></span>
                     </div>
                   </div>
 
-                  {revealedSecretId === key.id && (
-                    <div className="p-2.5 bg-amber-50/70 border border-amber-200 rounded-xl flex items-center justify-between gap-2 text-[11px] animate-fade-in">
-                      <code className="font-mono font-bold text-amber-800 truncate">{key.secret}</code>
-                      <button
-                        onClick={() => handleCopyText(key.secret, `secret-${key.id}`)}
-                        className="p-1.5 rounded-lg bg-white text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer shrink-0"
-                      >
+                  {revealed && (
+                    <div className="py-2.5 mt-2.5 flex items-center justify-between gap-2 rounded-xl bg-amber-50/70 border border-amber-200 px-2.5 animate-fade-in">
+                      <code className="font-mono text-[11px] font-bold text-amber-800 truncate">{key.secret}</code>
+                      <button onClick={() => handleCopyText(key.secret, `secret-${key.id}`)} className="p-1.5 rounded-lg bg-white text-amber-700 border border-amber-200 hover:bg-amber-100 cursor-pointer shrink-0">
                         {copiedAddressId === `secret-${key.id}` ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   )}
 
-                  <div className="flex flex-wrap items-center gap-2 text-[10px] text-[#6B7280]">
+                  <div className="py-2.5 mt-2.5 flex flex-wrap items-center gap-1.5 text-[10px] text-[#6B7280]">
                     {key.permissions.map((perm) => (
                       <span key={perm} className={`px-2 py-0.5 rounded-full font-bold border ${
                         perm === 'Withdrawals' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-purple-50 text-[#6D28D9] border-purple-100'
@@ -1102,525 +948,336 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                         {perm}
                       </span>
                     ))}
-                    <span className="ml-auto flex items-center gap-3">
-                      <span>IP: <strong className="text-[#171717] font-mono">{key.ipWhitelist}</strong></span>
-                      <span>Created: <strong className="text-[#171717]">{key.createdAt}</strong></span>
-                      <span>Last used: <strong className="text-[#171717]">{key.lastUsed}</strong></span>
-                    </span>
+                  </div>
+
+                  <div className="pt-2.5 mt-2.5 flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] text-[#6B7280]">IP <strong className="text-[#171717] font-mono">{key.ipWhitelist}</strong></span>
+                    <span className="text-[10px] text-[#6B7280]">Created <strong className="text-[#171717]">{key.createdAt}</strong></span>
+                    <div className="ml-auto flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          if (revealed) { setRevealedSecretId(null); }
+                          else { setRevealedSecretId(key.id); setSavedNotice('API secret revealed. Never share this value.'); setTimeout(() => setSavedNotice(null), 3000); }
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors cursor-pointer ${revealed ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-white text-[#6B7280] border border-[#EDE9FE] hover:text-[#171717]'}`}
+                      >
+                        {revealed ? 'Hide Secret' : 'Secret'}
+                      </button>
+                      <button
+                        onClick={() => handleCopyText(key.accessKey, `key-${key.id}`)}
+                        className="p-1.5 rounded-lg bg-white text-[#6D28D9] border border-[#EDE9FE] hover:bg-purple-50 cursor-pointer"
+                        title="Copy Access Key"
+                      >
+                        {copiedAddressId === `key-${key.id}` ? <Check className="w-3 h-3 text-[#16A34A]" /> : <Copy className="w-3 h-3" />}
+                      </button>
+                      <button
+                        onClick={() => handleToggleApiKey(key.id)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer flex items-center gap-1 ${key.enabled ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100' : 'bg-emerald-50 text-[#16A34A] border border-emerald-100 hover:bg-emerald-100'}`}
+                      >
+                        <Power className="w-3 h-3" /> {key.enabled ? 'Disable' : 'Enable'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteApiKey(key.id)}
+                        className="p-1.5 rounded-lg bg-white text-red-600 border border-red-100 hover:bg-red-50 cursor-pointer"
+                        title="Delete API Key"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              );
+            })}
+          </ProfileSection>
 
-          {/* Security Notice */}
-          <div className="p-4 bg-white border border-[#EDE9FE] rounded-[24px] shadow-sm flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100 shrink-0">
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-            <p className="text-[11px] text-[#6B7280] leading-relaxed">
-              <strong className="text-[#171717]">API secrets are shown only once at creation and can never be recovered.</strong>{' '}
-              Attach an IP whitelist to restrict use to your servers. Withdrawal permissions are blocked by default and require
-              a separate 2FA confirmation for every withdrawal request.
-            </p>
-          </div>
+          <ProfileRow
+            icon={AlertTriangle}
+            label="API Security Notice"
+            hint="Secrets are shown once and can never be recovered. Withdrawals require separate 2FA."
+            chevron={false}
+            iconTone="bg-amber-50 text-amber-600"
+          />
         </div>
       )}
 
       {/* TAB D: WALLET & ADDRESSES */}
       {activeSubTab === 'wallet' && (
-        <div className="space-y-6 animate-fade-in">
-          {/* Multi-Chain Asset Balances Table */}
-          <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 sm:p-6 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#EDE9FE]">
-              <div>
-                <h3 className="text-sm font-bold text-[#171717]">Multi-Chain Crypto Assets</h3>
-                <p className="text-xs text-[#6B7280]">Balances across native Xena chain and cross-chain bridges</p>
-              </div>
+        <div className="space-y-4 animate-fade-in">
+          <button
+            onClick={() => setShowDepositQrModal(true)}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-[16px] bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white shadow-sm hover:shadow-md transition-all cursor-pointer"
+          >
+            <span className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <QrCode className="w-4 h-4" />
+            </span>
+            <span className="flex-1 text-left">
+              <span className="block text-[13px] font-extrabold">Receive Address QR</span>
+              <span className="block text-[11px] opacity-80">Scan to deposit across supported chains</span>
+            </span>
+            <ChevronRight className="w-4 h-4 opacity-80" />
+          </button>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowDepositQrModal(true)}
-                  className="px-3.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#6D28D9] text-xs font-bold flex items-center gap-1.5 cursor-pointer"
-                >
-                  <QrCode className="w-3.5 h-3.5" />
-                  <span>Receive Address QR</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {cryptoAssets.map((asset) => (
-                <div
-                  key={asset.symbol}
-                  className="p-4 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE] flex flex-col justify-between gap-3 hover:border-purple-200 transition-colors"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <span className="w-7 h-7 rounded-full bg-white border border-[#EDE9FE] flex items-center justify-center font-extrabold text-xs text-[#6D28D9]">
-                          {asset.symbol[0]}
-                        </span>
-                        <div>
-                          <span className="text-xs font-bold text-[#171717]">{asset.symbol}</span>
-                          <span className="text-[10px] text-[#6B7280] block">{asset.name}</span>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold text-[#16A34A]">{asset.change}</span>
-                    </div>
-
-                    <div className="mt-2 space-y-1">
-                      <div className="text-base font-extrabold text-[#171717] font-mono">
-                        {asset.balance.toLocaleString()} {asset.symbol}
-                      </div>
-                      <div className="text-xs text-[#6B7280]">
-                        ≈ ${asset.value.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
-                      </div>
-                    </div>
+          <ProfileSection title="Multi-Chain Crypto Assets">
+            {cryptoAssets.map((asset) => (
+              <div key={asset.symbol} className="px-4 py-3 flex items-center gap-3">
+                <span className="w-9 h-9 shrink-0 rounded-xl bg-[#F8F7FC] border border-[#EDE9FE] flex items-center justify-center font-extrabold text-xs text-[#6D28D9]">
+                  {asset.symbol[0]}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-bold text-[#171717]">{asset.symbol}</span>
+                    <span className="text-[10px] text-[#6B7280] truncate">{asset.name} · {asset.network}</span>
                   </div>
-
-                  <div className="pt-2 border-t border-[#EDE9FE] flex items-center justify-between">
-                    <button
-                      onClick={() => handleCopyText(asset.depositAddress, asset.symbol)}
-                      className="text-[11px] font-bold text-[#6D28D9] hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      {copiedAddressId === asset.symbol ? <Check className="w-3 h-3 text-[#16A34A]" /> : <Copy className="w-3 h-3" />}
-                      <span>{copiedAddressId === asset.symbol ? 'Copied' : 'Copy Address'}</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setSelectedDepositNetwork(asset.symbol as any);
-                        setShowDepositQrModal(true);
-                      }}
-                      className="text-[11px] font-bold text-[#6B7280] hover:text-[#171717] flex items-center gap-1 cursor-pointer"
-                    >
-                      <QrCode className="w-3 h-3" />
-                      <span>QR Code</span>
-                    </button>
+                  <div className="text-[11px] text-[#6B7280]">
+                    <span className="font-mono font-bold text-[#171717]">{asset.balance.toLocaleString()} {asset.symbol}</span>
+                    {' '}· ≈ ${asset.value.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Connected Web3 External Wallets */}
-          <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 sm:p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#EDE9FE]">
-              <div>
-                <h3 className="text-sm font-bold text-[#171717]">Connected Web3 Wallets</h3>
-                <p className="text-xs text-[#6B7280]">Authorize decentralized dApps and hardware signers</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {connectedWallets.map((wallet) => (
-                <div
-                  key={wallet.id}
-                  className="p-4 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE] flex items-center justify-between"
+                <span className="text-[11px] font-bold text-[#16A34A] shrink-0">{asset.change}</span>
+                <button
+                  onClick={() => { setSelectedDepositNetwork(asset.symbol as any); setShowDepositQrModal(true); }}
+                  className="shrink-0 p-1.5 rounded-lg bg-white text-[#6D28D9] border border-[#EDE9FE] hover:bg-purple-50 cursor-pointer"
+                  title="QR Code"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{wallet.icon}</span>
-                    <div>
-                      <h4 className="text-xs font-bold text-[#171717]">{wallet.name}</h4>
-                      <p className="text-[10px] text-[#6B7280] font-mono">{wallet.address}</p>
-                    </div>
-                  </div>
+                  <QrCode className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => handleCopyText(asset.depositAddress, asset.symbol)}
+                  className="shrink-0 p-1.5 rounded-lg bg-white text-[#6D28D9] border border-[#EDE9FE] hover:bg-purple-50 cursor-pointer"
+                  title="Copy Address"
+                >
+                  {copiedAddressId === asset.symbol ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            ))}
+          </ProfileSection>
 
+          <ProfileSection title="Connected Web3 Wallets">
+            {connectedWallets.map((wallet) => (
+              <ProfileRow
+                key={wallet.id}
+                icon={Wallet}
+                label={wallet.name}
+                hint={wallet.address}
+                chevron={false}
+                iconTone="bg-[#F8F7FC] text-[#6D28D9]"
+                indicator={
+                  wallet.status === 'Connected' ? <StatusChip tone="green">Connected</StatusChip> : <StatusChip tone="slate">Standby</StatusChip>
+                }
+                trailing={
                   <button
                     onClick={() => handleToggleWalletConnect(wallet.id)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    className={`shrink-0 px-3 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
                       wallet.status === 'Connected'
-                        ? 'bg-emerald-50 text-[#16A34A] border border-emerald-100 hover:bg-red-50 hover:text-red-600 hover:border-red-100'
+                        ? 'bg-white text-[#6B7280] border border-[#EDE9FE] hover:text-[#E11D48] hover:border-rose-100'
                         : 'bg-white text-[#6B7280] border border-[#EDE9FE] hover:text-[#171717]'
                     }`}
                   >
-                    {wallet.status === 'Connected' ? 'Connected' : 'Connect'}
+                    {wallet.status === 'Connected' ? 'Disconnect' : 'Connect'}
                   </button>
-                </div>
-              ))}
-            </div>
-          </div>
+                }
+              />
+            ))}
+          </ProfileSection>
 
-          {/* Saved Withdrawal Whitelist Addresses */}
-          <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 sm:p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#EDE9FE]">
-              <div>
-                <h3 className="text-sm font-bold text-[#171717]">Saved Withdrawal Whitelist</h3>
-                <p className="text-xs text-[#6B7280]">Approved destination addresses for fast & secure transfers</p>
-              </div>
-
-              <button
-                onClick={() => setShowAddAddress(!showAddAddress)}
-                className="px-3 py-1.5 rounded-xl bg-[#6D28D9] text-white text-xs font-bold flex items-center gap-1.5 hover:bg-[#5B21B6] transition-colors cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Address</span>
-              </button>
-            </div>
+          <ProfileSection title="Saved Withdrawal Whitelist">
+            <button
+              onClick={() => setShowAddAddress(!showAddAddress)}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#FAF8FF] transition-colors cursor-pointer"
+            >
+              <span className="w-9 h-9 shrink-0 rounded-xl bg-[#6D28D9]/10 text-[#6D28D9] flex items-center justify-center">
+                <Plus className="w-4 h-4" />
+              </span>
+              <span className="flex-1">
+                <span className="block text-[13px] font-bold text-[#6D28D9]">Add Whitelist Address</span>
+                <span className="block text-[11px] text-[#9CA3AF]">Save an approved destination for fast transfers</span>
+              </span>
+              <ChevronRight className="w-4 h-4 text-[#CBD5E1]" />
+            </button>
 
             {showAddAddress && (
-              <form onSubmit={handleAddWhitelist} className="p-4 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE] space-y-3 animate-fade-in">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-[11px] font-bold text-[#6B7280] block mb-1">Label / Device Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. My Ledger Cold Storage"
-                      value={newLabel}
-                      onChange={(e) => setNewLabel(e.target.value)}
-                      required
-                      className="w-full bg-white border border-[#EDE9FE] rounded-xl px-3 py-2 text-xs text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#6D28D9]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-[#6B7280] block mb-1">Network</label>
-                    <select
-                      value={newNetwork}
-                      onChange={(e) => setNewNetwork(e.target.value)}
-                      className="w-full bg-white border border-[#EDE9FE] rounded-xl px-3 py-2 text-xs text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#6D28D9]"
-                    >
-                      <option value="XENA Network">XENA Network (Native)</option>
-                      <option value="Ethereum (ERC-20)">Ethereum (ERC-20)</option>
-                      <option value="TRC-20 (Tron)">TRC-20 (Tron)</option>
-                      <option value="Solana Native">Solana Native</option>
-                      <option value="Bitcoin Native">Bitcoin Native</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-[#6B7280] block mb-1">Recipient Address</label>
-                    <input
-                      type="text"
-                      placeholder="0x... or bc1..."
-                      value={newAddress}
-                      onChange={(e) => setNewAddress(e.target.value)}
-                      required
-                      className="w-full bg-white border border-[#EDE9FE] rounded-xl px-3 py-2 text-xs text-[#171717] font-mono focus:outline-none focus:ring-1 focus:ring-[#6D28D9]"
-                    />
-                  </div>
+              <form onSubmit={handleAddWhitelist} className="px-4 py-3 space-y-3 animate-fade-in border-t border-[#F1EDF9]">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <input type="text" placeholder="Label / Device Name" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} required
+                    className="w-full bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl px-3 py-2 text-xs text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#6D28D9]" />
+                  <select value={newNetwork} onChange={(e) => setNewNetwork(e.target.value)}
+                    className="w-full bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl px-3 py-2 text-xs text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#6D28D9]">
+                    <option value="XENA Network">XENA Network (Native)</option>
+                    <option value="Ethereum (ERC-20)">Ethereum (ERC-20)</option>
+                    <option value="TRC-20 (Tron)">TRC-20 (Tron)</option>
+                    <option value="Solana Native">Solana Native</option>
+                    <option value="Bitcoin Native">Bitcoin Native</option>
+                  </select>
+                  <input type="text" placeholder="0x... or bc1..." value={newAddress} onChange={(e) => setNewAddress(e.target.value)} required
+                    className="w-full bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl px-3 py-2 text-xs font-mono text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#6D28D9]" />
                 </div>
-
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddAddress(false)}
-                    className="px-4 py-1.5 rounded-xl bg-white border border-[#EDE9FE] text-xs font-bold text-[#6B7280] cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-1.5 rounded-xl bg-[#6D28D9] text-white text-xs font-bold cursor-pointer"
-                  >
-                    Save to Whitelist
-                  </button>
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setShowAddAddress(false)} className="px-4 py-1.5 rounded-xl bg-white border border-[#EDE9FE] text-xs font-bold text-[#6B7280] cursor-pointer">Cancel</button>
+                  <button type="submit" className="px-4 py-1.5 rounded-xl bg-[#6D28D9] text-white text-xs font-bold cursor-pointer">Save to Whitelist</button>
                 </div>
               </form>
             )}
 
-            <div className="space-y-2.5">
-              {whitelistAddresses.map((addr) => (
-                <div
-                  key={addr.id}
-                  className="p-3.5 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE] flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-[#171717]">{addr.label}</span>
-                      <span className="text-[10px] text-[#6D28D9] bg-purple-50 px-2 py-0.2 rounded-full border border-purple-100 font-bold">
-                        {addr.network}
-                      </span>
-                    </div>
-                    <span className="text-xs text-[#6B7280] font-mono mt-0.5 block truncate max-w-md">
-                      {addr.address}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <button
-                      onClick={() => handleCopyText(addr.address, addr.id)}
-                      className="p-1.5 rounded-lg bg-white hover:bg-[#EDE9FE] text-[#6D28D9] border border-[#EDE9FE] cursor-pointer"
-                      title="Copy Address"
-                    >
+            {whitelistAddresses.map((addr) => (
+              <ProfileRow
+                key={addr.id}
+                icon={Wallet}
+                label={addr.label}
+                hint={addr.address}
+                chevron={false}
+                iconTone="bg-[#F8F7FC] text-[#6D28D9]"
+                indicator={<span className="text-[10px] font-bold text-[#6D28D9] bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">{addr.network}</span>}
+                trailing={
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button onClick={() => handleCopyText(addr.address, addr.id)} className="p-1.5 rounded-lg bg-white text-[#6D28D9] border border-[#EDE9FE] hover:bg-purple-50 cursor-pointer" title="Copy">
                       {copiedAddressId === addr.id ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
-                    <button
-                      onClick={() => handleDeleteWhitelist(addr.id)}
-                      className="p-1.5 rounded-lg bg-white hover:bg-red-50 text-red-600 border border-red-100 cursor-pointer"
-                      title="Delete Whitelist"
-                    >
+                    <button onClick={() => handleDeleteWhitelist(addr.id)} className="p-1.5 rounded-lg bg-white text-red-600 border border-red-100 hover:bg-red-50 cursor-pointer" title="Delete">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                }
+              />
+            ))}
+          </ProfileSection>
         </div>
       )}
 
       {/* TAB D: KYC & LIMITS HUB */}
       {activeSubTab === 'kyc' && (
-        <div className="space-y-6 animate-fade-in">
-          {/* Header Banner */}
-          <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#16A34A] text-xs font-bold border border-emerald-100">
-                  Current: {currentKycTier}
-                </span>
-                <span className="text-xs text-[#6B7280]">ID & Biometrics Verified</span>
-              </div>
-              <h3 className="text-lg font-extrabold text-[#171717] mt-1">Identity & Limits Tier Matrix</h3>
-              <p className="text-xs text-[#6B7280]">Unlock higher daily withdrawal limits, OTC desk access, and priority settlement.</p>
-            </div>
-
-            {currentKycTier !== 'Tier 3 (Institutional)' && (
-              <button
-                onClick={() => setShowKycUpgradeModal(true)}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white font-bold text-xs hover:opacity-95 transition-all shadow-xs flex items-center gap-2 cursor-pointer self-start sm:self-auto"
-              >
+        <div className="space-y-4 animate-fade-in">
+          <ProfileRow
+            icon={Shield}
+            label={`Current Tier · ${currentKycTier}`}
+            hint="ID & Biometrics Verified · Unlock higher limits, OTC access & priority settlement"
+            chevron={false}
+            indicator={<StatusChip tone="green">Verified</StatusChip>}
+          />
+          {currentKycTier !== 'Tier 3 (Institutional)' && (
+            <button
+              onClick={() => setShowKycUpgradeModal(true)}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-[16px] bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white shadow-sm hover:shadow-md transition-all cursor-pointer"
+            >
+              <span className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
                 <Sparkles className="w-4 h-4" />
-                <span>Upgrade to Tier 3</span>
-              </button>
-            )}
-          </div>
-
-          {/* Tier Comparison Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Tier 1 */}
-            <div className="p-5 rounded-[22px] bg-[#F8F7FC] border border-[#EDE9FE] space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#EDE9FE]">
-                <h4 className="font-extrabold text-sm text-[#171717]">Tier 1 (Basic)</h4>
-                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Completed</span>
-              </div>
-              <ul className="space-y-2 text-xs text-[#4B5563]">
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
-                  <span>Email & Phone verification</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
-                  <span>Daily limit: $2,000 USD</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
-                  <span>P2P Trading Access</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Tier 2 */}
-            <div className="p-5 rounded-[22px] bg-purple-50/40 border border-purple-200 space-y-4 relative">
-              <span className="absolute -top-2.5 right-4 px-2 py-0.5 bg-[#6D28D9] text-white text-[10px] font-bold rounded-full shadow-2xs">
-                Active Tier
               </span>
-              <div className="flex items-center justify-between pb-3 border-b border-purple-100">
-                <h4 className="font-extrabold text-sm text-[#6D28D9]">Tier 2 (Verified Standard)</h4>
-                <span className="text-[10px] font-bold text-[#16A34A] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Current</span>
-              </div>
-              <ul className="space-y-2 text-xs text-[#171717]">
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
-                  <span>Government Photo ID + Facial Liveness</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
-                  <span>Daily limit: <strong>$100,000 USD / 24h</strong></span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
-                  <span>Staking & Yield Vaults unlocked</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
-                  <span>Full P2P Merchant privileges</span>
-                </li>
-              </ul>
-            </div>
+              <span className="flex-1 text-left">
+                <span className="block text-[13px] font-extrabold">Upgrade to Tier 3 (Institutional)</span>
+                <span className="block text-[11px] opacity-80">Unlimited daily withdrawals & OTC concierge</span>
+              </span>
+              <ChevronRight className="w-4 h-4 opacity-80" />
+            </button>
+          )}
 
-            {/* Tier 3 */}
-            <div className="p-5 rounded-[22px] bg-gradient-to-b from-purple-50/60 to-white border border-purple-200 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#EDE9FE]">
-                <h4 className="font-extrabold text-sm text-[#171717] flex items-center gap-1.5">
-                  <span>Tier 3 (Institutional)</span>
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                </h4>
-                {currentKycTier === 'Tier 3 (Institutional)' ? (
-                  <span className="text-[10px] font-bold text-[#16A34A] bg-emerald-50 px-2 py-0.5 rounded-full">Active</span>
-                ) : (
-                  <span className="text-[10px] font-bold text-[#6D28D9] bg-purple-100 px-2 py-0.5 rounded-full">Available</span>
-                )}
-              </div>
-              <ul className="space-y-2 text-xs text-[#4B5563]">
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#7C3AED] shrink-0" />
-                  <span>Proof of Address & Source of Funds</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#7C3AED] shrink-0" />
-                  <span><strong>Unlimited Daily Withdrawals</strong></span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#7C3AED] shrink-0" />
-                  <span>Dedicated OTC Institutional Concierge</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#7C3AED] shrink-0" />
-                  <span>Zero Maker Trading Fee Discount</span>
-                </li>
-              </ul>
-            </div>
-          </div>
+          <ProfileSection title="Tier 1 (Basic)">
+            <ProfileRow icon={CheckCircle2} label="Email & Phone verification" chevron={false} iconTone="bg-emerald-50 text-[#16A34A]" indicator={<StatusChip tone="green">Done</StatusChip>} />
+            <ProfileRow icon={DollarSign} label="Daily limit" trailing={<span className="text-xs font-bold text-[#171717]">$2,000 USD</span>} chevron={false} />
+            <ProfileRow icon={ArrowRightLeft} label="P2P Trading Access" chevron={false} indicator={<StatusChip tone="green">Done</StatusChip>} />
+          </ProfileSection>
+
+          <ProfileSection title="Tier 2 (Verified Standard)">
+            <ProfileRow icon={Shield} label="Government Photo ID + Facial Liveness" chevron={false} iconTone="bg-emerald-50 text-[#16A34A]" indicator={<StatusChip tone="green">Done</StatusChip>} />
+            <ProfileRow icon={DollarSign} label="Daily limit" trailing={<span className="text-xs font-bold text-[#171717]">$100,000 USD / 24h</span>} chevron={false} />
+            <ProfileRow icon={Layers} label="Staking & Yield Vaults unlocked" chevron={false} iconTone="bg-emerald-50 text-[#16A34A]" indicator={<StatusChip tone="green">Done</StatusChip>} />
+            <ProfileRow icon={Users} label="Full P2P Merchant privileges" chevron={false} iconTone="bg-emerald-50 text-[#16A34A]" indicator={currentKycTier === 'Tier 1' ? <StatusChip tone="amber">Pending</StatusChip> : <StatusChip tone="green">Done</StatusChip>} />
+          </ProfileSection>
+
+          <ProfileSection title="Tier 3 (Institutional)">
+            <ProfileRow icon={FileText} label="Proof of Address & Source of Funds" chevron={false} indicator={currentKycTier === 'Tier 3 (Institutional)' ? <StatusChip tone="green">Done</StatusChip> : <StatusChip tone="amber">Pending</StatusChip>} />
+            <ProfileRow icon={DollarSign} label="Daily withdrawals" trailing={<span className="text-xs font-bold text-[#6D28D9]">Unlimited</span>} chevron={false} />
+            <ProfileRow icon={Award} label="Dedicated OTC Institutional Concierge" chevron={false} indicator={<StatusChip tone="purple">Premium</StatusChip>} />
+          </ProfileSection>
         </div>
       )}
 
       {/* TAB E: AFFILIATE & REFERRALS HUB */}
       {activeSubTab === 'referrals' && (
-        <div className="space-y-6 animate-fade-in">
-          {/* Hero Banner & Rewards Claim */}
-          <div className="bg-gradient-to-r from-[#5B21B6] via-[#7C3AED] to-[#A855F7] text-white rounded-[24px] p-6 sm:p-8 shadow-sm space-y-6">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="space-y-2">
-                <span className="px-3 py-1 rounded-full bg-white/20 text-white text-xs font-extrabold backdrop-blur-xs">
-                  {referralStats.tier}
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                  Earn 20% Lifetime Staking & Trade Commissions
-                </h2>
-                <p className="text-xs sm:text-sm text-purple-100 max-w-xl">
-                  Share your exclusive partner link. Whenever friends stake in yield vaults or trade on P2P, earn instant XENA rewards deposited straight to your wallet.
-                </p>
-              </div>
-
-              {/* Unclaimed Rewards Box */}
-              <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center sm:text-right shrink-0">
-                <span className="text-[11px] text-purple-200 uppercase font-bold block">Unclaimed Commission</span>
-                <div className="text-2xl font-black text-white font-mono my-1">
-                  {referralStats.unclaimedXena} XENA
+        <div className="space-y-4 animate-fade-in">
+          <div className="bg-gradient-to-r from-[#5B21B6] via-[#7C3AED] to-[#A855F7] text-white rounded-[16px] p-5 text-white relative overflow-hidden">
+            <div className="relative z-10">
+              <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-extrabold">{referralStats.tier}</span>
+              <h2 className="text-lg font-extrabold mt-2">Earn 20% Lifetime Staking & Trade Commissions</h2>
+              <p className="text-[11px] text-purple-100 mt-1">Share your link — friends stake in vaults or trade on P2P, you earn XENA instantly.</p>
+              <div className="mt-3 flex items-center gap-2 justify-between">
+                <div>
+                  <span className="text-[10px] text-purple-200 block">Unclaimed Commission</span>
+                  <span className="text-xl font-black font-mono">{referralStats.unclaimedXena} XENA</span>
                 </div>
                 <button
                   onClick={handleClaimReferralRewards}
                   disabled={referralStats.unclaimedXena <= 0}
-                  className="w-full sm:w-auto px-5 py-2 rounded-xl bg-white text-[#6D28D9] font-extrabold text-xs hover:bg-purple-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
+                  className="px-4 py-2 rounded-lg bg-white text-[#6D28D9] font-extrabold text-[11px] hover:bg-purple-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
                 >
-                  Claim to Spot Wallet
+                  Claim to Wallet
                 </button>
               </div>
             </div>
-
-            {/* Referral Link & Code Share Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-white/15">
-              <div className="space-y-1">
-                <span className="text-[11px] font-bold text-purple-200">Your Referral Link</span>
-                <div className="flex items-center bg-black/25 backdrop-blur-sm rounded-xl p-2 border border-white/15 text-xs font-mono">
-                  <span className="truncate flex-1 text-white pr-2">{referralLink}</span>
-                  <button
-                    onClick={() => handleCopyText(referralLink, 'ref-link')}
-                    className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer"
-                  >
-                    {copiedAddressId === 'ref-link' ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-[11px] font-bold text-purple-200">Referral Code</span>
-                <div className="flex items-center bg-black/25 backdrop-blur-sm rounded-xl p-2 border border-white/15 text-xs font-mono">
-                  <span className="flex-1 font-bold text-white tracking-wider">{referralCode}</span>
-                  <button
-                    onClick={() => handleCopyText(referralCode, 'ref-code')}
-                    className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer"
-                  >
-                    {copiedAddressId === 'ref-code' ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* Stats Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-2xs">
-              <span className="text-[10px] uppercase font-bold text-[#6B7280] block">Invited Friends</span>
-              <span className="text-lg font-extrabold text-[#171717]">{referralStats.totalInvited} Traders</span>
-            </div>
-            <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-2xs">
-              <span className="text-[10px] uppercase font-bold text-[#6B7280] block">Active Stakers</span>
-              <span className="text-lg font-extrabold text-[#16A34A]">{referralStats.activeStakers} Active</span>
-            </div>
-            <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-2xs">
-              <span className="text-[10px] uppercase font-bold text-[#6B7280] block">Total Commission Earned</span>
-              <span className="text-lg font-extrabold text-[#6D28D9] font-mono">{referralStats.totalEarnedXena} XENA</span>
-            </div>
-            <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-2xs">
-              <span className="text-[10px] uppercase font-bold text-[#6B7280] block">Commission Rate</span>
-              <span className="text-lg font-extrabold text-[#171717]">20% Tier</span>
-            </div>
-          </div>
+          <ProfileSection title="Share & Earn">
+            <ProfileRow
+              icon={Share2}
+              label="Referral Link"
+              hint={referralLink}
+              chevron={false}
+              trailing={<button onClick={() => handleCopyText(referralLink, 'ref-link')} className="shrink-0 p-2 rounded-lg bg-[#F8F7FC] text-[#6D28D9] border border-[#EDE9FE] hover:bg-purple-50 cursor-pointer">{copiedAddressId === 'ref-link' ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}</button>}
+            />
+            <ProfileRow
+              icon={BadgePercent}
+              label="Referral Code"
+              hint={referralCode}
+              chevron={false}
+              trailing={<button onClick={() => handleCopyText(referralCode, 'ref-code')} className="shrink-0 p-2 rounded-lg bg-[#F8F7FC] text-[#6D28D9] border border-[#EDE9FE] hover:bg-purple-50 cursor-pointer">{copiedAddressId === 'ref-code' ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}</button>}
+            />
+          </ProfileSection>
 
-          {/* Invited Friends Ledger */}
-          <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 sm:p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#EDE9FE]">
-              <h3 className="text-sm font-bold text-[#171717]">Recent Friend Activity & Payouts</h3>
-              <span className="text-xs text-[#6B7280]">Auto-settled to spot wallet</span>
-            </div>
+          <ProfileSection title="Commission Stats">
+            <ProfileRow icon={Users} label="Invited Friends" trailing={<span className="text-xs font-extrabold text-[#171717]">{referralStats.totalInvited} Traders</span>} chevron={false} />
+            <ProfileRow icon={Flame} label="Active Stakers" trailing={<span className="text-xs font-extrabold text-[#16A34A]">{referralStats.activeStakers} Active</span>} chevron={false} />
+            <ProfileRow icon={TrendingUp} label="Total Commission Earned" trailing={<span className="text-xs font-extrabold font-mono text-[#6D28D9]">{referralStats.totalEarnedXena} XENA</span>} chevron={false} />
+            <ProfileRow icon={BadgePercent} label="Commission Rate" trailing={<span className="text-xs font-extrabold text-[#171717]">20% Tier</span>} chevron={false} />
+          </ProfileSection>
 
-            <div className="divide-y divide-[#EDE9FE]">
-              {referralsList.map((ref) => (
-                <div key={ref.id} className="py-3 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-purple-50 text-[#6D28D9] font-bold flex items-center justify-center">
-                      <Users className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="font-bold text-[#171717] block">{ref.user}</span>
-                      <span className="text-[10px] text-[#6B7280]">Joined {ref.joined} • Staked: {ref.staked}</span>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="font-bold text-[#16A34A] block">{ref.reward}</span>
-                    <span className="text-[10px] text-[#6D28D9] font-semibold">{ref.status}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ProfileSection title="Recent Friend Activity & Payouts">
+            {referralsList.map((ref) => (
+              <ProfileRow
+                key={ref.id}
+                icon={Users}
+                label={ref.user}
+                hint={`Joined ${ref.joined} · Staked: ${ref.staked}`}
+                chevron={false}
+                trailing={<span className="text-right"><span className="block text-xs font-bold text-[#16A34A]">{ref.reward}</span><span className="block text-[10px] text-[#6D28D9] font-semibold">{ref.status}</span></span>}
+              />
+            ))}
+          </ProfileSection>
         </div>
       )}
 
       {/* TAB F: TAX & ACCOUNT STATEMENTS */}
       {activeSubTab === 'statements' && (
-        <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 sm:p-6 shadow-sm space-y-6 animate-fade-in">
-          <div>
-            <h3 className="text-sm font-bold text-[#171717]">Financial & Tax Statements Exporter</h3>
-            <p className="text-xs text-[#6B7280]">Generate official stamped trade history, staking yield records, and audit proofs for accounting.</p>
-          </div>
+        <div className="space-y-4 animate-fade-in">
+          <ProfileRow
+            icon={FileText}
+            label="Financial & Tax Statements Exporter"
+            hint="Generate official stamped trade history, yield records & audit proofs"
+            chevron={false}
+            iconTone="bg-purple-50 text-[#6D28D9]"
+          />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE]">
-            <div>
-              <label className="text-[11px] font-bold text-[#6B7280] block mb-1">Fiscal Year</label>
-              <select
-                value={statementYear}
-                onChange={(e) => setStatementYear(e.target.value)}
-                className="w-full bg-white border border-[#EDE9FE] rounded-xl px-3 py-2 text-xs font-bold text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#6D28D9]"
-              >
+          <ProfileSection title="Statement Options">
+            <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[#6B7280] w-32 shrink-0">Fiscal Year</span>
+              <select value={statementYear} onChange={(e) => setStatementYear(e.target.value)}
+                className="flex-1 bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl px-3 py-2 text-xs font-bold text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#6D28D9] cursor-pointer">
                 <option value="2026">2026 (Current Fiscal Year)</option>
                 <option value="2025">2025</option>
                 <option value="2024">2024</option>
               </select>
             </div>
-
-            <div>
-              <label className="text-[11px] font-bold text-[#6B7280] block mb-1">Period Range</label>
-              <select
-                value={statementMonth}
-                onChange={(e) => setStatementMonth(e.target.value)}
-                className="w-full bg-white border border-[#EDE9FE] rounded-xl px-3 py-2 text-xs font-bold text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#6D28D9]"
-              >
+            <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[#6B7280] w-32 shrink-0">Period Range</span>
+              <select value={statementMonth} onChange={(e) => setStatementMonth(e.target.value)}
+                className="flex-1 bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl px-3 py-2 text-xs font-bold text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#6D28D9] cursor-pointer">
                 <option value="All Year">Entire Fiscal Year (12 Months)</option>
                 <option value="Q1">Q1 (Jan - Mar)</option>
                 <option value="Q2">Q2 (Apr - Jun)</option>
@@ -1629,68 +1286,54 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 <option value="Last 30 Days">Last 30 Days</option>
               </select>
             </div>
-
-            <div>
-              <label className="text-[11px] font-bold text-[#6B7280] block mb-1">Document Format</label>
-              <div className="flex bg-white rounded-xl border border-[#EDE9FE] p-1">
+            <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[#6B7280] w-32 shrink-0">Document Format</span>
+              <div className="flex bg-[#F8F7FC] rounded-xl border border-[#EDE9FE] p-1">
                 {(['PDF', 'CSV'] as const).map((fmt) => (
-                  <button
-                    key={fmt}
-                    onClick={() => setStatementFormat(fmt)}
-                    className={`flex-1 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
-                      statementFormat === fmt ? 'bg-[#6D28D9] text-white' : 'text-[#6B7280] hover:text-[#171717]'
-                    }`}
-                  >
+                  <button key={fmt} onClick={() => setStatementFormat(fmt)}
+                    className={`px-4 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${statementFormat === fmt ? 'bg-[#6D28D9] text-white' : 'text-[#6B7280] hover:text-[#171717]'}`}>
                     {fmt}
                   </button>
                 ))}
               </div>
             </div>
-          </div>
+            <ProfileRow
+              icon={CheckCircle2}
+              label="Includes Staking Yields, P2P Invoices, Spot Swaps, Deposit/Withdrawal Hashes"
+              chevron={false}
+              iconTone="bg-emerald-50 text-[#16A34A]"
+            />
+          </ProfileSection>
 
-          <div className="flex items-center justify-between pt-2">
-            <div className="text-xs text-[#6B7280]">
-              <span>Includes: Staking Yields, P2P Order Invoices, Spot Swaps, and Deposit/Withdrawal Hashes.</span>
-            </div>
-
-            <button
-              onClick={handleDownloadStatement}
-              disabled={statementDownloaded}
-              className="px-5 py-2.5 rounded-xl bg-[#6D28D9] hover:bg-[#5B21B6] text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              <span>{statementDownloaded ? 'Downloading...' : `Download ${statementFormat} Statement`}</span>
-            </button>
-          </div>
+          <button
+            onClick={handleDownloadStatement}
+            disabled={statementDownloaded}
+            className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-[16px] bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white font-bold text-[13px] hover:opacity-95 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <Download className="w-4 h-4" />
+            <span>{statementDownloaded ? 'Downloading...' : `Download ${statementFormat} Statement`}</span>
+          </button>
         </div>
       )}
 
       {/* TAB G: PREFERENCES */}
       {activeSubTab === 'preferences' && (
-        <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 sm:p-6 shadow-sm space-y-6 animate-fade-in">
-          <div>
-            <h3 className="text-sm font-bold text-[#171717]">Account Settings & Preferences</h3>
-            <p className="text-xs text-[#6B7280]">Customize notifications, default display currency, and settlement alerts</p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE]">
-              <div>
-                <h4 className="text-xs font-bold text-[#171717]">Display Currency</h4>
-                <p className="text-[11px] text-[#6B7280]">All fiat approximations and portfolio values</p>
+        <div className="space-y-4 animate-fade-in">
+          <ProfileSection title="Account Settings & Preferences">
+            <div className="px-4 py-3 flex items-center gap-3">
+              <span className="w-9 h-9 shrink-0 rounded-xl bg-[#6D28D9]/10 text-[#6D28D9] flex items-center justify-center">
+                <DollarSign className="w-4 h-4" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <span className="block text-[13px] font-bold text-[#171717]">Display Currency</span>
+                <span className="block text-[11px] text-[#9CA3AF]">All fiat approximations and portfolio values</span>
               </div>
-              <div className="flex bg-white rounded-xl border border-[#EDE9FE] p-1">
+              <div className="flex bg-[#F8F7FC] rounded-xl border border-[#EDE9FE] p-1 shrink-0">
                 {(['USD', 'EUR', 'GBP'] as const).map((cur) => (
                   <button
                     key={cur}
-                    onClick={() => {
-                      setCurrency(cur);
-                      setSavedNotice(`Currency set to ${cur}`);
-                      setTimeout(() => setSavedNotice(null), 2000);
-                    }}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
-                      currency === cur ? 'bg-[#6D28D9] text-white' : 'text-[#6B7280] hover:text-[#171717]'
-                    }`}
+                    onClick={() => { setCurrency(cur); setSavedNotice(`Currency set to ${cur}`); setTimeout(() => setSavedNotice(null), 2000); }}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${currency === cur ? 'bg-[#6D28D9] text-white' : 'text-[#6B7280] hover:text-[#171717]'}`}
                   >
                     {cur}
                   </button>
@@ -1698,45 +1341,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE]">
-              <div>
-                <h4 className="text-xs font-bold text-[#171717]">Email Security Alerts</h4>
-                <p className="text-[11px] text-[#6B7280]">Receive instant email notices upon login or password change</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={emailAlerts}
-                onChange={(e) => setEmailAlerts(e.target.checked)}
-                className="w-5 h-5 accent-[#6D28D9] cursor-pointer"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE]">
-              <div>
-                <h4 className="text-xs font-bold text-[#171717]">Trade & Staking Yield Notifications</h4>
-                <p className="text-[11px] text-[#6B7280]">Daily summary of staking yields earned from active vaults</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={tradeNotifications}
-                onChange={(e) => setTradeNotifications(e.target.checked)}
-                className="w-5 h-5 accent-[#6D28D9] cursor-pointer"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-[#F8F7FC] rounded-2xl border border-[#EDE9FE]">
-              <div>
-                <h4 className="text-xs font-bold text-[#171717]">Marketing & Ecosystem Announcements</h4>
-                <p className="text-[11px] text-[#6B7280]">Receive new yield vault releases and market insights</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={marketingUpdates}
-                onChange={(e) => setMarketingUpdates(e.target.checked)}
-                className="w-5 h-5 accent-[#6D28D9] cursor-pointer"
-              />
-            </div>
-          </div>
+            <PrefToggle label="Email Security Alerts" hint="Instant email notices on login or password change" checked={emailAlerts} onChange={setEmailAlerts} />
+            <PrefToggle label="Trade & Staking Yield Notifications" hint="Daily summary of staking yields earned from vaults" checked={tradeNotifications} onChange={setTradeNotifications} />
+            <PrefToggle label="Marketing & Ecosystem Announcements" hint="New yield vault releases and market insights" checked={marketingUpdates} onChange={setMarketingUpdates} />
+          </ProfileSection>
         </div>
       )}
 
