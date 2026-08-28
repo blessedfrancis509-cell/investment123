@@ -30,16 +30,6 @@ interface P2PPageProps {
 
 const ASSETS = ['XENA', 'USDT', 'BTC', 'ETH'];
 
-const PAYMENT_OPTIONS = [
-  { label: 'All Channels', value: 'all' },
-  { label: 'Bank Transfer', value: 'Bank Transfer' },
-  { label: 'Revolut', value: 'Revolut' },
-  { label: 'Wise', value: 'Wise' },
-  { label: 'SEPA Instant', value: 'SEPA Instant' },
-  { label: 'Zelle', value: 'Zelle' },
-  { label: 'Apple Pay', value: 'Apple Pay' },
-];
-
 const EXPRESS_CHANNELS = ['Revolut', 'Bank Transfer', 'Wise', 'SEPA Instant'];
 
 export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOffer }) => {
@@ -475,19 +465,6 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
                 {verifiedOnly ? 'Verified Pro Only' : 'Verified Only'}
               </button>
             </div>
-
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar pt-1">
-              {PAYMENT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setSelectedPaymentMethod(opt.value)}
-                  className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 ${selectedPaymentMethod === opt.value ? 'bg-[#6D28D9] text-white shadow-xs' : 'bg-[#F8F7FC] text-[#6B7280] hover:text-[#171717] border border-[#EDE9FE]'}`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* Offers table / cards */}
           <div className="bg-white border border-[#EDE9FE] rounded-[20px] shadow-xs overflow-hidden">
