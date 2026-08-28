@@ -1,20 +1,42 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# XENA Exchange
 
-# Run and deploy your AI Studio app
+Premium fintech demo: spot trading, P2P marketplace with escrow, yield/investment vaults, wallet, transactions, announcements, profile, and settings — built with [React 19](https://react.dev), [Vite 6](https://vite.dev), and [Tailwind CSS v4](https://tailwindcss.com).
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/77c3b1b5-4b11-4b5b-a8e7-2525c2128df3
+- Spot market with 0% fee simulated execution
+- P2P desk (buy/sell with smart-contract escrow simulation)
+- Yield investments with tiered APY packages
+- Wallet, multi-chain deposit addresses, withdrawals
+- Profile (KYC, API keys, referrals, statements, preferences), Settings (account, notifications, appearance, security)
+- Login/Signup pages with one-click demo access
+- Fully responsive (desktop header + mobile bottom nav)
+- Installable PWA (web app manifest + service worker)
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:** Node.js 18+ (Node 22 recommended)
 
+```bash
+npm install
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Open http://localhost:3000
+
+## Build
+
+```bash
+npm run build
+npm run preview
+```
+
+## Type Check
+
+```bash
+npm run lint
+```
+
+## Deploy
+
+The repo includes a `netlify.toml` (Node 22, build `npm run build`, publish `dist`). Connect it to Netlify or use Netlify Drop with the `dist/` folder.
