@@ -19,7 +19,7 @@ export const WelcomeSection: React.FC<WelcomeSectionProps> = ({ user, livePrice 
   const greeting = getGreeting();
 
   return (
-    <section className="pt-8 pb-4" id="xena-welcome-section">
+    <section className="pt-4 pb-2" id="xena-welcome-section">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1.5">

@@ -110,9 +110,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fade-in" id="wallet-page-view">
+    <div className="space-y-4 sm:space-y-8 animate-fade-in" id="wallet-page-view">
       {/* 1. Portfolio Net Worth Header Card */}
-      <div className="bg-gradient-to-br from-[#171717] via-[#2A1B4E] to-[#171717] rounded-[24px] p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#1E1B4B] via-[#6D28D9] to-[#0E7490] rounded-[24px] p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#22D3EE]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-[#F59E0B]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-1">
             <span className="text-xs uppercase font-bold tracking-wider text-purple-300">

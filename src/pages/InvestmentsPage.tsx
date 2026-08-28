@@ -175,8 +175,10 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
   return (
     <div className="space-y-3 animate-fade-in" id="investments-page-view">
       {/* ===== 1. HEADER ===== */}
-      <div className="bg-gradient-to-br from-[#5B21B6] via-[#6D28D9] to-[#7C3AED] rounded-[20px] px-4 sm:px-6 py-4 text-white shadow-lg relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#6D28D9] via-[#7C3AED] to-[#C026D3] rounded-[20px] px-4 sm:px-6 py-4 text-white shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-56 h-56 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 left-1/4 w-40 h-40 bg-[#FBBF24]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-44 h-44 bg-[#22D3EE]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center shrink-0">
@@ -216,7 +218,7 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
       </div>
 
       {/* ===== 2. STAKING PERFORMANCE ===== */}
-      <div className="bg-white border border-[#EDE9FE] rounded-[20px] p-4 sm:p-5 shadow-sm space-y-3">
+      <div className="bg-gradient-to-br from-white via-purple-50/50 to-indigo-50/40 border border-[#EDE9FE] rounded-[20px] p-4 sm:p-5 shadow-sm space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#A855F7] flex items-center justify-center text-white shrink-0">
@@ -302,7 +304,7 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h2 className="text-sm font-bold text-[#171717]">Explore Vault Packages</h2>
+            <h2 className="text-sm font-bold bg-gradient-to-r from-[#6D28D9] via-[#7C3AED] to-[#C026D3] bg-clip-text text-transparent">Explore Vault Packages</h2>
             <p className="text-[10px] text-[#6B7280]">Buy a package — it appears instantly at the top of this page with live progress</p>
           </div>
           <div className="flex flex-wrap bg-[#F8F7FC] p-0.5 rounded-lg border border-[#EDE9FE] self-start sm:self-auto gap-0.5">

@@ -151,7 +151,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
   return (
     <div className="space-y-6 animate-fade-in" id="settings-page-view">
       {/* Header */}
-      <div className="bg-gradient-to-br from-[#5B21B6] via-[#6D28D9] to-[#7C3AED] rounded-[22px] p-5 sm:p-7 text-white shadow-lg relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#5B21B6] via-[#7C3AED] to-[#C026D3] rounded-[22px] p-5 sm:p-7 text-white shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">

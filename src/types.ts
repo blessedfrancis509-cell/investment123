@@ -8,6 +8,7 @@ export interface UserProfile {
   twoFactorEnabled: boolean;
   pinSet: boolean;
   verifiedAccountsCount: number;
+  role?: 'user' | 'admin';
 }
 
 export interface UserBalances {
@@ -130,4 +131,78 @@ export interface MarketNewsItem {
   readTime: string;
   url?: string;
   isHot?: boolean;
+}
+
+export interface VaultPackage {
+  id: string;
+  name: string;
+  category: string;
+  apy: number;
+  duration: string;
+  days: number;
+  minDeposit: number;
+  badge: string;
+  risk: string;
+  description: string;
+}
+
+export interface StoreUserBalances {
+  availableXena: number;
+  nairaBalance: number;
+  investedXena: number;
+}
+
+export interface StoreUser {
+  id: string;
+  name: string;
+  email: string;
+  xenaId: string;
+  xenaCode: string;
+  kycTier: string;
+  joined: string;
+  status: 'active' | 'frozen';
+  twoFactorEnabled: boolean;
+  pinSet: boolean;
+  balances: StoreUserBalances;
+}
+
+export interface EscrowCredit {
+  id: string;
+  reference: string;
+  bank: string;
+  accountNumber: string;
+  nairaAmount: number;
+  xenaAmount: number;
+  status: 'pending' | 'confirmed' | 'dismissed';
+  createdAt: string;
+  email: string;
+}
+
+export interface PromoCode {
+  code: string;
+  rewardXena: number;
+  label: string;
+  description: string;
+  active: boolean;
+  redeemedCount: number;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  action: string;
+  target: string;
+  detail: string;
+  timestamp: string;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  date: string;
+  tag: string;
+  tagColor: string;
+  summary: string;
+  actionText?: string;
+  actionId?: 'p2p' | 'staking';
+  publishedBy?: string;
 }

@@ -58,7 +58,7 @@ export const AnnouncementsPage: React.FC<AnnouncementsPageProps> = ({
   ];
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fade-in" id="announcements-page-view">
+    <div className="space-y-4 sm:space-y-8 animate-fade-in" id="announcements-page-view">
       {/* Header */}
       <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-6 sm:p-8 shadow-sm">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-[#6D28D9] text-xs font-bold border border-purple-100 mb-2">

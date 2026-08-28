@@ -102,7 +102,7 @@ export const TransactionsPage: React.FC<TransactionsPageProps> = ({ transactions
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fade-in" id="transactions-page-view">
+    <div className="space-y-4 sm:space-y-8 animate-fade-in" id="transactions-page-view">
       {/* 1. Header & Summary */}
       <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-6 sm:p-8 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

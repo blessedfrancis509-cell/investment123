@@ -450,7 +450,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fade-in" id="profile-page-view">
+    <div className="space-y-4 sm:space-y-8 animate-fade-in" id="profile-page-view">
       {/* Emergency Freeze Banner if Active */}
       {isEmergencyLocked && (
         <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fade-in shadow-sm">

@@ -55,7 +55,7 @@ export const SecurityPage: React.FC<SecurityPageProps> = ({ user, onUpdateSecuri
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fade-in" id="security-page-view">
+    <div className="space-y-4 sm:space-y-8 animate-fade-in" id="security-page-view">
       {/* 1. Header Hero with Security Score */}
       <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-6 sm:p-8 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">

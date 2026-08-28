@@ -118,7 +118,7 @@ export const BonusCodeSection: React.FC<BonusCodeSectionProps> = ({
   };
 
   return (
-    <section className="bg-white border border-[#EDE9FE] rounded-[24px] p-6 sm:p-7 shadow-xs relative overflow-hidden" id="bonus-codes-section">
+    <section className="bg-white border border-[#EDE9FE] rounded-[24px] p-4 sm:p-7 shadow-xs relative overflow-hidden" id="bonus-codes-section">
       {/* Decorative gradient blur */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-purple-100/40 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
 

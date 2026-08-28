@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, User, Menu, X, ChevronDown, CheckCircle2, Shield, ArrowUpRight, Settings } from 'lucide-react';
+import { Search, Bell, User, Menu, X, ChevronDown, Shield, ArrowUpRight, Settings } from 'lucide-react';
 import { XenaLogo } from './XenaLogo';
 import { UserProfile, NotificationItem } from '../types';
 
@@ -111,19 +111,6 @@ export const Header: React.FC<HeaderProps> = ({
               {unreadCount > 0 && (
                 <span className="absolute 1.5 top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
               )}
-            </button>
-
-            {/* Settings gear icon */}
-            <button
-              onClick={() => onSelectTab('settings')}
-              className={`p-2 rounded-full transition-colors cursor-pointer ${
-                activeTab === 'settings'
-                  ? 'text-[#6D28D9] bg-purple-50'
-                  : 'text-[#6B7280] hover:text-[#171717] hover:bg-[#F8F7FC]'
-              }`}
-              title="Account Settings"
-            >
-              <Settings className="w-5 h-5" />
             </button>
 
             {/* Profile Avatar & Menu */}

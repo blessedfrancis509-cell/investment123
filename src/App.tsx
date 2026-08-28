@@ -21,7 +21,6 @@ import {
 // Layout Components
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
-import { Footer } from './components/Footer';
 
 // Individual Dedicated Pages
 import { HomePage } from './pages/HomePage';
@@ -503,12 +502,9 @@ export default function App() {
       />
 
       {/* Main Page Canvas */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
         {renderCurrentPage()}
       </main>
-
-      {/* Global Desktop & Tablet Footer */}
-      <Footer />
 
       {/* Mobile-Optimized Fixed Bottom Navigation */}
       <BottomNav

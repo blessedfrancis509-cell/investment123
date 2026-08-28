@@ -48,7 +48,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const featuredP2POffers = p2pOffers.slice(0, 2);
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fade-in" id="home-page-view">
+    <div className="space-y-4 sm:space-y-8 animate-fade-in" id="home-page-view">
       {/* 1. Welcome Section */}
       <WelcomeSection user={user} livePrice={marketStats.price} />
 

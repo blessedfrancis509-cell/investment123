@@ -64,7 +64,7 @@ export const MainBalanceCard: React.FC<MainBalanceCardProps> = ({
 
   return (
     <div
-      className="relative rounded-[24px] p-6 sm:p-7 text-white overflow-hidden shadow-xl shadow-purple-200/40 deep-gradient transition-all duration-300"
+      className="relative rounded-[24px] p-5 sm:p-7 text-white overflow-hidden shadow-xl shadow-purple-200/40 deep-gradient transition-all duration-300"
       id="main-balance-card"
     >
       {/* Background spline wave accent per design theme */}
