@@ -146,11 +146,7 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [claimedNotice, setClaimedNotice] = useState<string | null>(null);
   const [showSupportModal, setShowSupportModal] = useState<boolean>(false);
-
-  const totalInvested = plans.reduce((acc, p) => acc + p.investedAmount, 0);
-  const totalEarned = plans.reduce((acc, p) => acc + p.earnedAmount, 0);
-  const avgApy = (plans.reduce((acc, p) => acc + p.projectedReturnPercent, 0) / (plans.length || 1)).toFixed(1);
-
+const totalEarned = plans.reduce((acc, p) => acc + p.earnedAmount, 0);
   // Group active plans strictly by their package category — a plan bought
   // from a package only ever appears under that package's header.
   const grouped = plans.reduce<Record<string, InvestmentPlan[]>>((acc, plan) => {
@@ -187,24 +183,6 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
                 <span className="px-2 py-0.5 rounded-md bg-white/15 border border-white/25 text-[9px] font-bold uppercase tracking-wide backdrop-blur">Institutional Staking</span>
               </div>
               <p className="text-[11px] text-purple-100">Lock XENA into validator vaults & liquidity pools with daily compounding.</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 bg-white/10 backdrop-blur-md p-2.5 rounded-xl border border-white/20 min-w-[260px]">
-            <div>
-              <span className="text-[8px] text-purple-200 uppercase font-bold block leading-none">Staked</span>
-              <span className="text-sm font-bold font-mono block leading-none mt-0.5">{totalInvested.toLocaleString()} XENA</span>
-              <span className="text-[9px] text-purple-200">≈ ${(totalInvested * balances.usdRate).toLocaleString()}</span>
-            </div>
-            <div>
-              <span className="text-[8px] text-purple-200 uppercase font-bold block leading-none">Earned</span>
-              <span className="text-sm font-bold text-green-300 font-mono block leading-none mt-0.5">+{totalEarned.toFixed(2)}</span>
-              <span className="text-[9px] text-green-200">+${(totalEarned * balances.usdRate).toFixed(2)}</span>
-            </div>
-            <div>
-              <span className="text-[8px] text-purple-200 uppercase font-bold block leading-none">Avg APY</span>
-              <span className="text-sm font-bold font-mono block leading-none mt-0.5">{avgApy}%</span>
-              <span className="text-[9px] text-purple-200">Daily Payout</span>
             </div>
           </div>
         </div>
