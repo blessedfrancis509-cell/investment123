@@ -193,8 +193,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [tradeNotifications, setTradeNotifications] = useState(true);
   const [marketingUpdates, setMarketingUpdates] = useState(false);
 
-  const totalXenaAmount = balances.totalXena ?? balances.totalBalance ?? (balances.availableXena + balances.investedXena);
-  const totalFiat = totalXenaAmount * balances.usdRate;
   const spotFiat = balances.availableXena * balances.usdRate;
   const investedFiat = balances.investedXena * balances.usdRate;
 
@@ -518,37 +516,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             </div>
           </div>
 
-          {/* Quick Balance & Security Rating Pills */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="p-3.5 bg-white/10 rounded-2xl border border-white/20 backdrop-blur text-left">
-              <span className="text-[10px] uppercase font-bold text-purple-200 block">Total Portfolio</span>
-              <span className="text-base font-extrabold text-white font-mono">
-                ${totalFiat.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
-              </span>
-              <span className="text-[10px] text-amber-300 block font-bold">
-                {totalXenaAmount.toLocaleString()} XENA
-              </span>
-            </div>
-
-            <div className="p-3.5 bg-white/10 rounded-2xl border border-white/20 backdrop-blur flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 border-2 border-white/40 flex items-center justify-center text-white font-extrabold text-xs font-mono shadow-inner">
-                98%
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-purple-200 block">Security Score</span>
-                <span className="text-xs font-bold text-emerald-300 block">SOC-2 Shielded</span>
-              </div>
-            </div>
-
             <button
               onClick={() => setShowFreezeModal(true)}
-              className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-red-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer backdrop-blur"
+              className="px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-red-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer backdrop-blur shrink-0 self-start sm:self-center"
               title="Emergency 1-Click Lockdown"
             >
               <AlertTriangle className="w-4 h-4" />
               <span className="hidden sm:inline">Emergency Freeze</span>
             </button>
-          </div>
         </div>
 
         {savedNotice && (
@@ -559,36 +534,44 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         )}
       </div>
 
-      {/* 2. Navigation Tabs for Profile Sections */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-[#EDE9FE]">
-        {[
-          { id: 'overview', label: 'Overview', icon: User },
-          { id: 'security', label: 'Security & Auth', icon: ShieldCheck },
-          { id: 'api', label: 'API Keys', icon: KeyRound },
-          { id: 'wallet', label: 'Wallet & Addresses', icon: Wallet },
-          { id: 'kyc', label: 'KYC & Limits', icon: Shield },
-          { id: 'referrals', label: 'Affiliate & Referrals', icon: Users },
-          { id: 'statements', label: 'Tax & Statements', icon: FileText },
-          { id: 'preferences', label: 'Preferences', icon: Sliders },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeSubTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveSubTab(tab.id as any)}
-              className={`flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white shadow-md shadow-fuchsia-200/50'
-                  : 'bg-white text-[#6B7280] hover:text-[#171717] border border-[#EDE9FE]'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* 2. Navigation List + Content */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+        {/* Left: Vertical List */}
+        <div className="md:col-span-3 bg-white border border-[#EDE9FE] rounded-[20px] p-2 shadow-sm md:sticky md:top-20">
+          <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible scrollbar-none md:p-1">
+            {[
+              { id: 'overview', label: 'Overview', icon: User },
+              { id: 'security', label: 'Security & Auth', icon: ShieldCheck },
+              { id: 'api', label: 'API Keys', icon: KeyRound },
+              { id: 'wallet', label: 'Wallet & Addresses', icon: Wallet },
+              { id: 'kyc', label: 'KYC & Limits', icon: Shield },
+              { id: 'referrals', label: 'Affiliate & Referrals', icon: Users },
+              { id: 'statements', label: 'Tax & Statements', icon: FileText },
+              { id: 'preferences', label: 'Preferences', icon: Sliders },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeSubTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveSubTab(tab.id as any)}
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex-1 md:flex-none ${
+                    isActive
+                      ? 'bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white shadow-md shadow-fuchsia-200/50'
+                      : 'text-[#6B7280] hover:text-[#171717] hover:bg-[#F8F7FC]'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{tab.label}</span>
+                  {isActive && <span className="ml-auto hidden md:block w-1.5 h-1.5 rounded-full bg-white" />}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Right: Content */}
+        <div className="md:col-span-9 space-y-5">
 
       {/* 3. Tab Contents */}
 
@@ -2157,6 +2140,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };
