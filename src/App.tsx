@@ -520,6 +520,7 @@ export default function App() {
         availableXena={balances.availableXena}
         nairaBalance={balances.nairaBalance}
         xenaNgnRate={balances.xenaNgnRate}
+        xenaUsdPrice={marketStats.price}
         onSuccess={handleBalanceChange}
       />
 

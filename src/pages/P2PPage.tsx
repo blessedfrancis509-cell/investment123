@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Zap,
   Plus,
-  HelpCircle,
   X,
   CreditCard,
   Info,
@@ -16,7 +15,6 @@ import {
   LifeBuoy,
   ChevronRight,
   BadgeCheck,
-  Clock,
   FileText,
   Lock,
 } from 'lucide-react';
@@ -27,8 +25,6 @@ interface P2PPageProps {
   onSelectOffer: (offer: P2POffer, initialPaymentMethod?: string) => void;
   onAddOffer?: (newOffer: P2POffer) => void;
 }
-
-const ASSETS = ['XENA', 'USDT', 'BTC', 'ETH'];
 
 const EXPRESS_CHANNELS = ['Revolut', 'Bank Transfer', 'Wise', 'SEPA Instant'];
 
@@ -153,90 +149,27 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
               <Zap className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-lg sm:text-xl font-extrabold text-[#171717] tracking-tight">P2P Trading</h1>
-                <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-100">
-                  0% Fee
-                </span>
-                <span className="px-2 py-0.5 rounded-md bg-purple-50 text-[#6D28D9] text-[10px] font-bold border border-purple-100 hidden sm:inline-flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3" /> Escrow Protected
-                </span>
-              </div>
+              <h1 className="text-lg sm:text-xl font-extrabold text-[#171717] tracking-tight">P2P Trading</h1>
               <p className="text-[11px] text-[#6B7280] truncate">
-                Buy & sell crypto directly with verified merchants via your local payment methods.
+                Buy & sell XENA directly with verified merchants via your local payment methods.
               </p>
             </div>
           </div>
 
-          {/* Compact Actions */}
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Buy / Sell toggle */}
+          <div className="flex bg-[#F8F7FC] p-0.5 rounded-lg border border-[#EDE9FE] self-start sm:self-auto">
             <button
-              onClick={() => setShowSupportModal(true)}
-              className="px-3 py-2 rounded-xl bg-[#F8F7FC] hover:bg-purple-50 border border-[#EDE9FE] text-[#6B7280] hover:text-[#6D28D9] font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+              onClick={() => setTradeType('BUY')}
+              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${tradeType === 'BUY' ? 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white shadow-xs' : 'text-[#6B7280] hover:text-[#171717]'}`}
             >
-              <Headphones className="w-4 h-4" />
-              <span className="hidden sm:inline">CS Support</span>
-              <span className="sm:hidden">CS</span>
+              Buy
             </button>
             <button
-              onClick={() => setShowSafetyGuide(true)}
-              className="px-3 py-2 rounded-xl bg-[#F8F7FC] hover:bg-purple-50 border border-[#EDE9FE] text-[#6B7280] hover:text-[#6D28D9] font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+              onClick={() => setTradeType('SELL')}
+              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${tradeType === 'SELL' ? 'bg-[#171717] text-white shadow-xs' : 'text-[#6B7280] hover:text-[#171717]'}`}
             >
-              <HelpCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Safety</span>
+              Sell
             </button>
-            <button
-              onClick={() => setShowMerchantModal(true)}
-              className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <BadgeCheck className="w-4 h-4 text-amber-600" />
-              <span className="hidden sm:inline">Merchant</span>
-            </button>
-            <button
-              onClick={() => setShowPostAdModal(true)}
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white font-bold text-xs shadow-xs hover:opacity-95 transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Post Ad</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Metric strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 pt-3 border-t border-[#EDE9FE]">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-[#16A34A] flex items-center justify-center text-[10px] font-bold shrink-0">0%</div>
-            <div>
-              <p className="text-[9px] text-[#6B7280] font-medium leading-none">Platform Fee</p>
-              <p className="text-[11px] font-bold text-[#171717] leading-tight">Zero Cost</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-purple-50 text-[#7C3AED] flex items-center justify-center shrink-0">
-              <Clock className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <p className="text-[9px] text-[#6B7280] font-medium leading-none">Release</p>
-              <p className="text-[11px] font-bold text-[#171717] leading-tight">~2 min</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-              <Lock className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <p className="text-[9px] text-[#6B7280] font-medium leading-none">Escrow</p>
-              <p className="text-[11px] font-bold text-[#171717] leading-tight">100% Safe</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-              <BadgeCheck className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <p className="text-[9px] text-[#6B7280] font-medium leading-none">Completion</p>
-              <p className="text-[11px] font-bold text-[#171717] leading-tight">99.8%</p>
-            </div>
           </div>
         </div>
       </div>
@@ -412,17 +345,13 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
                   </button>
                 </div>
 
-                <div className="flex items-center gap-1 bg-[#F8F7FC] p-0.5 rounded-lg border border-[#EDE9FE]">
-                  {ASSETS.map((asset) => (
-                    <button
-                      key={asset}
-                      onClick={() => setSelectedAsset(asset)}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${selectedAsset === asset ? 'bg-white text-[#6D28D9] shadow-xs border border-[#EDE9FE]' : 'text-[#6B7280] hover:text-[#171717]'}`}
-                    >
-                      {asset}
-                    </button>
-                  ))}
-                </div>
+                <button
+                  onClick={() => setShowPostAdModal(true)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${tradeType === 'SELL' ? 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100' : 'bg-[#F8F7FC] text-[#6B7280] border border-[#EDE9FE] hover:text-[#171717]'}`}
+                >
+                  <Plus className={`w-3.5 h-3.5 ${tradeType === 'SELL' ? 'text-amber-600' : ''}`} />
+                  <span>{tradeType === 'SELL' ? 'List XENA for Sale' : 'Post Ad'}</span>
+                </button>
 
                 <button
                   onClick={() => setViewMode('express')}

@@ -10,6 +10,7 @@ interface DepositWithdrawModalProps {
   availableXena: number;
   nairaBalance: number;
   xenaNgnRate: number;
+  xenaUsdPrice: number;
   onSuccess: (amountChange: number, newTx: Transaction) => void;
 }
 
@@ -21,6 +22,11 @@ const ESCROW_BANK = {
   sortCode: '101',
 };
 const NGN_TRANSFER_FEE = 500;
+const CRYPTO_ASSETS: Record<'usdt' | 'btc' | 'sol', { label: string; network: string; address: string; usdRate: number }> = {
+  usdt: { label: 'USDT', network: 'TRC20 (Tron)', address: 'TQm9eV6nY1X4r2T8WkB3dH9pJ5sL7vNc2uQ', usdRate: 1 },
+  btc: { label: 'BTC', network: 'Bitcoin', address: 'bc1q5lz3xt7k9r2m4v8n6p0w2y3s4d5f6a7h8j9k1m', usdRate: 65000 },
+  sol: { label: 'SOL', network: 'Solana', address: '7GkdV2hY1x4R6t8Qm3Wb9pL5sD7fK2nC4a6B8vT0zE', usdRate: 150 },
+};
 
 export const DepositWithdrawModal: React.FC<DepositWithdrawModalProps> = ({
   isOpen,
@@ -29,11 +35,12 @@ export const DepositWithdrawModal: React.FC<DepositWithdrawModalProps> = ({
   availableXena,
   nairaBalance,
   xenaNgnRate,
+  xenaUsdPrice,
   onSuccess,
 }) => {
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>(initialTab);
-  const [depositMethod, setDepositMethod] = useState<'ngn' | 'crypto' | 'card'>('ngn');
-  const [withdrawMethod, setWithdrawMethod] = useState<'ngn' | 'xena'>('ngn');
+  const [depositMethod, setDepositMethod] = useState<'ngn' | 'usdt' | 'btc' | 'sol'>('ngn');
+  const [withdrawMethod, setWithdrawMethod] = useState<'ngn' | 'xena' | 'usdt' | 'btc' | 'sol'>('ngn');
   const [amount, setAmount] = useState<string>('500');
   const [ngnAmount, setNgnAmount] = useState<string>('200000');
   const [withdrawAddress, setWithdrawAddress] = useState<string>('0x71C...84B29A');
@@ -47,8 +54,7 @@ export const DepositWithdrawModal: React.FC<DepositWithdrawModalProps> = ({
 
   if (!isOpen) return null;
 
-  const rate = Math.max(1, xenaNgnRate);
-  const depositAddress = '0x8F4b5C9217E6B2349a1d48cEF918a36284b39A1';
+  const rate = Math.max(0.0001, xenaNgnRate);
   const xenaFromNgn = (ngn: number) => Math.round((ngn / rate) * 10000) / 10000;
   const fmtNgn = (n: number) => `₦${Math.round(n).toLocaleString('en-US')}`;
   const ngnFromXena = (x: number) => Math.round(x * rate);
@@ -78,10 +84,12 @@ export const DepositWithdrawModal: React.FC<DepositWithdrawModalProps> = ({
     } else {
       const num = parseFloat(amount);
       if (isNaN(num) || num <= 0) return;
-      xena = num;
-      payMethod = depositMethod === 'crypto' ? 'XENA Mainnet Transfer' : 'Debit Card (Instant Buy)';
+      const asset = CRYPTO_ASSETS[depositMethod as 'usdt' | 'btc' | 'sol'];
+      const xenaUsd = Math.max(0.0001, xenaUsdPrice);
+      xena = (num * asset.usdRate) / xenaUsd;
+      payMethod = `${asset.label} Deposit (${asset.network})`;
       headline = `Successfully deposited +${xena.toLocaleString()} XENA to your account!`;
-      details = 'Funds are available for trading, staking, and withdrawals.';
+      details = `${num} ${asset.label} was received and converted to XENA at the live market rate.`;
     }
 
     setIsSubmitting(true);
@@ -134,10 +142,11 @@ export const DepositWithdrawModal: React.FC<DepositWithdrawModalProps> = ({
       const num = parseFloat(amount);
       if (isNaN(num) || num <= 0 || num > availableXena) return;
       xena = num;
-      payMethod = 'XENA Mainnet Transfer';
+      const label = withdrawMethod === 'xena' ? 'XENA' : CRYPTO_ASSETS[withdrawMethod as 'usdt' | 'btc' | 'sol'].label;
+      payMethod = `${label} Network Transfer`;
       cparty = withdrawAddress;
       fee = 1.50;
-      headline = `Withdrawal request of ${xena.toLocaleString()} XENA submitted securely.`;
+      headline = `Withdrawal request of ${xena.toLocaleString()} XENA (≈ ${label}) submitted securely.`;
     }
 
     setIsSubmitting(true);
@@ -245,11 +254,12 @@ export const DepositWithdrawModal: React.FC<DepositWithdrawModalProps> = ({
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-2">
                   Select Deposit Method
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {[
                     { id: 'ngn', label: '₦ Naira (Escrow)', desc: '0% fee · Instant' },
-                    { id: 'crypto', label: 'XENA Network', desc: '0% fee · Instant' },
-                    { id: 'card', label: 'Debit Card', desc: 'Instant buy' },
+                    { id: 'usdt', label: 'USDT', desc: 'TRC20 · Instant' },
+                    { id: 'btc', label: 'BTC', desc: 'Bitcoin · Instant' },
+                    { id: 'sol', label: 'Solana', desc: 'SOL · Instant' },
                   ].map((m) => (
                     <button
                       key={m.id}
@@ -370,107 +380,82 @@ export const DepositWithdrawModal: React.FC<DepositWithdrawModalProps> = ({
                 </>
               )}
 
-              {depositMethod === 'crypto' && (
-                <>
-                  <div className="p-4 rounded-xl bg-[#F8F7FC] border border-[#EDE9FE] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-[#6B7280]">Your Deposit Address (XENA Chain)</span>
-                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                        Active
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 bg-white rounded-lg border border-[#EDE9FE] text-[#6D28D9]">
-                        <QrCode className="w-5 h-5" />
+              {(depositMethod === 'usdt' || depositMethod === 'btc' || depositMethod === 'sol') && (() => {
+                const asset = CRYPTO_ASSETS[depositMethod];
+                return (
+                  <>
+                    <div className="p-4 rounded-xl bg-[#F8F7FC] border border-[#EDE9FE] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-[#6B7280]">Your Deposit Address ({asset.network})</span>
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                          Active
+                        </span>
                       </div>
-                      <code className="flex-1 text-xs font-mono text-[#171717] bg-white p-2 rounded-lg border border-[#EDE9FE] truncate select-all">
-                        {depositAddress}
-                      </code>
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(depositAddress, 'addr')}
-                        className="px-3 py-2 bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white text-xs font-medium rounded-lg hover:opacity-90 flex items-center gap-1 shadow-sm"
-                      >
-                        {copied === 'addr' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                        {copied === 'addr' ? 'Copied' : 'Copy'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-white rounded-lg border border-[#EDE9FE] text-[#6D28D9]">
+                          <QrCode className="w-5 h-5" />
+                        </div>
+                        <code className="flex-1 text-xs font-mono text-[#171717] bg-white p-2 rounded-lg border border-[#EDE9FE] truncate select-all">
+                          {asset.address}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(asset.address, 'addr')}
+                          className="px-3 py-2 bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white text-xs font-medium rounded-lg hover:opacity-90 flex items-center gap-1 shadow-sm"
+                        >
+                          {copied === 'addr' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copied === 'addr' ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-[#6B7280]">
+                        Deposit {asset.label} ({asset.network}). It is automatically converted to XENA at the live market rate.
+                      </p>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-[#171717] mb-1.5">
-                      Amount to Deposit (XENA)
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        min="1"
-                        step="any"
-                        required
-                        className="w-full px-4 py-2.5 text-base font-semibold text-[#171717] bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl focus:outline-none focus:border-[#7C3AED] focus:bg-white transition-all pr-16"
-                        placeholder="0.00"
-                      />
-                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 font-bold text-xs text-[#6D28D9]">
-                        XENA
+                    <div>
+                      <label className="block text-xs font-semibold text-[#171717] mb-1.5">
+                        Amount to Deposit ({asset.label})
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                          min="0"
+                          step="any"
+                          required
+                          className="w-full px-4 py-2.5 text-base font-semibold text-[#171717] bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl focus:outline-none focus:border-[#7C3AED] focus:bg-white transition-all pr-16"
+                          placeholder="0.00"
+                        />
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 font-bold text-xs text-[#6D28D9]">
+                          {asset.label}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-[#6B7280] bg-purple-50/50 border border-purple-100 rounded-lg p-2">
+                      <span>You receive (auto-converted)</span>
+                      <span className="font-bold text-[#6D28D9]">
+                        {(() => { const n = parseFloat(amount) || 0; const usd = Math.max(0.0001, xenaUsdPrice); return `≈ ${((n * asset.usdRate) / usd).toLocaleString()} XENA`; })()}
                       </span>
                     </div>
-                  </div>
 
-                  <div className="flex items-center justify-between text-xs text-[#6B7280] pt-1">
-                    <span>Estimated Network Fee</span>
-                    <span className="font-semibold text-emerald-600">0.00 XENA (Zero Fee)</span>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-[#7C3AED] to-[#A855F7] hover:shadow-[0_4px_16px_rgba(109,40,217,0.3)] hover:scale-[1.01] transition-all disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Confirming Deposit...' : `Deposit ${amount || 0} XENA Now`}
-                  </button>
-                </>
-              )}
-
-              {depositMethod === 'card' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#171717] mb-1.5">
-                      Amount to Buy (XENA)
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        min="1"
-                        step="any"
-                        required
-                        className="w-full px-4 py-2.5 text-base font-semibold text-[#171717] bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl focus:outline-none focus:border-[#7C3AED] focus:bg-white transition-all pr-16"
-                        placeholder="0.00"
-                      />
-                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 font-bold text-xs text-[#6D28D9]">
-                        XENA
-                      </span>
+                    <div className="flex items-center justify-between text-xs text-[#6B7280] pt-1">
+                      <span>Conversion Fee</span>
+                      <span className="font-semibold text-emerald-600">0% · Zero Fee</span>
                     </div>
-                    <p className="text-[10px] text-[#6B7280] mt-1">Charged in Naira at live escrow rate ≈ {fmtNgn(ngnFromXena(Math.max(0, parseFloat(amount) || 0)))}</p>
-                  </div>
 
-                  <div className="flex items-center justify-between text-xs text-[#6B7280] pt-1">
-                    <span>Card Processing Fee</span>
-                    <span className="font-semibold text-emerald-600">1.5% (Instant Settle)</span>
-                  </div>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-[#7C3AED] to-[#A855F7] hover:shadow-[0_4px_16px_rgba(109,40,217,0.3)] hover:scale-[1.01] transition-all disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Confirming Deposit...' : `Deposit ${amount || 0} ${asset.label} → XENA`}
+                    </button>
+                  </>
+                );
+              })()}
 
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-[#7C3AED] to-[#A855F7] hover:shadow-[0_4px_16px_rgba(109,40,217,0.3)] hover:scale-[1.01] transition-all disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Confirming Purchase...' : `Buy XENA Now`}
-                  </button>
-                </>
-              )}
             </form>
           ) : (
             <form onSubmit={handleWithdrawSubmit} className="space-y-4">
@@ -492,10 +477,13 @@ export const DepositWithdrawModal: React.FC<DepositWithdrawModalProps> = ({
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-2">
                   Withdraw As
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {(
                     [
                       { id: 'ngn', label: '₦ Naira (Bank)', desc: 'To Nigerian account' },
+                      { id: 'usdt', label: 'USDT', desc: 'TRC20' },
+                      { id: 'btc', label: 'BTC', desc: 'Bitcoin' },
+                      { id: 'sol', label: 'Solana', desc: 'SOL' },
                       { id: 'xena', label: 'XENA (Network)', desc: 'To crypto wallet' },
                     ] as const
                   ).map((m) => (
@@ -622,83 +610,88 @@ export const DepositWithdrawModal: React.FC<DepositWithdrawModalProps> = ({
                 </>
               )}
 
-              {withdrawMethod === 'xena' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#171717] mb-1.5">
-                      Destination Wallet / Address
-                    </label>
-                    <input
-                      type="text"
-                      value={withdrawAddress}
-                      onChange={(e) => setWithdrawAddress(e.target.value)}
-                      required
-                      placeholder="0x... or XENA Address"
-                      className="w-full px-4 py-2.5 text-xs font-mono text-[#171717] bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl focus:outline-none focus:border-[#7C3AED] focus:bg-white"
-                    />
-                  </div>
+              {(withdrawMethod === 'xena' || withdrawMethod === 'usdt' || withdrawMethod === 'btc' || withdrawMethod === 'sol') && (() => {
+                const payoutLabel = withdrawMethod === 'xena' ? 'XENA' : CRYPTO_ASSETS[withdrawMethod as 'usdt' | 'btc' | 'sol'].label;
+                const payoutUsdRate = withdrawMethod === 'xena' ? xenaUsdPrice : CRYPTO_ASSETS[withdrawMethod as 'usdt' | 'btc' | 'sol'].usdRate;
+                const payoutAmount = ((Math.max(0, (parseFloat(amount) || 0) - 1.5) * xenaUsdPrice) / payoutUsdRate);
+                return (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#171717] mb-1.5">
+                        Destination {payoutLabel} Address
+                      </label>
+                      <input
+                        type="text"
+                        value={withdrawAddress}
+                        onChange={(e) => setWithdrawAddress(e.target.value)}
+                        required
+                        placeholder={`Enter ${payoutLabel} address`}
+                        className="w-full px-4 py-2.5 text-xs font-mono text-[#171717] bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl focus:outline-none focus:border-[#7C3AED] focus:bg-white"
+                      />
+                    </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-semibold text-[#171717]">Withdraw Amount</label>
-                      <div className="flex gap-1.5">
-                        {[0.25, 0.5, 0.75, 1].map((pct) => (
-                          <button
-                            key={pct}
-                            type="button"
-                            onClick={() => setAmount((availableXena * pct).toFixed(2))}
-                            className="px-2 py-0.5 text-[10px] font-bold rounded bg-purple-50 text-[#7C3AED] hover:bg-purple-100 transition-colors"
-                          >
-                            {pct === 1 ? 'MAX' : `${pct * 100}%`}
-                          </button>
-                        ))}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-semibold text-[#171717]">Withdraw Amount (XENA)</label>
+                        <div className="flex gap-1.5">
+                          {[0.25, 0.5, 0.75, 1].map((pct) => (
+                            <button
+                              key={pct}
+                              type="button"
+                              onClick={() => setAmount((availableXena * pct).toFixed(2))}
+                              className="px-2 py-0.5 text-[10px] font-bold rounded bg-purple-50 text-[#7C3AED] hover:bg-purple-100 transition-colors"
+                            >
+                              {pct === 1 ? 'MAX' : `${pct * 100}%`}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                          max={availableXena}
+                          min="1"
+                          step="any"
+                          required
+                          className="w-full px-4 py-2.5 text-base font-semibold text-[#171717] bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl focus:outline-none focus:border-[#7C3AED] focus:bg-white transition-all pr-16"
+                          placeholder="0.00"
+                        />
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 font-bold text-xs text-[#6D28D9]">
+                          XENA
+                        </span>
                       </div>
                     </div>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        max={availableXena}
-                        min="1"
-                        step="any"
-                        required
-                        className="w-full px-4 py-2.5 text-base font-semibold text-[#171717] bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl focus:outline-none focus:border-[#7C3AED] focus:bg-white transition-all pr-16"
-                        placeholder="0.00"
-                      />
-                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 font-bold text-xs text-[#6D28D9]">
-                        XENA
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="space-y-1 text-xs text-[#6B7280] bg-[#F8F7FC] p-3 rounded-xl border border-[#EDE9FE]">
-                    <div className="flex justify-between">
-                      <span>Network Fee:</span>
-                      <span className="font-medium text-[#171717]">1.50 XENA</span>
+                    <div className="space-y-1 text-xs text-[#6B7280] bg-[#F8F7FC] p-3 rounded-xl border border-[#EDE9FE]">
+                      <div className="flex justify-between">
+                        <span>Network Fee:</span>
+                        <span className="font-medium text-[#171717]">1.50 XENA</span>
+                      </div>
+                      <div className="flex justify-between font-semibold text-[#171717]">
+                        <span>You will receive ({payoutLabel}):</span>
+                        <span className="text-[#6D28D9]">
+                          {payoutAmount.toFixed(payoutLabel === 'XENA' || payoutLabel === 'BTC' ? 4 : 2)} {payoutLabel}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between font-semibold text-[#171717]">
-                      <span>You will receive:</span>
-                      <span className="text-[#6D28D9]">
-                        {Math.max(0, (parseFloat(amount) || 0) - 1.5).toFixed(2)} XENA
-                      </span>
+
+                    <div className="flex items-center gap-2 text-xs text-[#6B7280]">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                      <span>Protected by 2FA & XENA Cold Vault Verification.</span>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 text-xs text-[#6B7280]">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span>Protected by 2FA & XENA Cold Vault Verification.</span>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || parseFloat(amount) > availableXena}
-                    className="w-full py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-[#5B21B6] via-[#7C3AED] to-[#8B5CF6] hover:shadow-[0_4px_16px_rgba(109,40,217,0.3)] hover:scale-[1.01] transition-all disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Authorizing Withdrawal...' : 'Confirm Withdrawal'}
-                  </button>
-                </>
-              )}
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || parseFloat(amount) > availableXena}
+                      className="w-full py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-[#5B21B6] via-[#7C3AED] to-[#8B5CF6] hover:shadow-[0_4px_16px_rgba(109,40,217,0.3)] hover:scale-[1.01] transition-all disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Authorizing Withdrawal...' : 'Confirm Withdrawal'}
+                    </button>
+                  </>
+                );
+              })()}
 
               {withdrawMethod === 'ngn' && ngnWithdraw > 0 && xenaFromNgn(ngnWithdraw) > availableXena && (
                 <div className="flex items-center gap-2 text-xs font-bold text-red-600 bg-red-50 border border-red-100 rounded-lg p-2.5">
