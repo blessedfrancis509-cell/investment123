@@ -42,7 +42,12 @@ import {
   KeyRound,
   Power,
   Wrench,
-  Mail
+  Mail,
+  LifeBuoy,
+  Headphones,
+  Send,
+  MessageCircle,
+  Clock3
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { UserProfile, UserBalances } from '../types';
@@ -164,7 +169,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   onSelectTab,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<
-    'overview' | 'security' | 'api' | 'wallet' | 'kyc' | 'referrals' | 'statements' | 'preferences'
+    'overview' | 'security' | 'api' | 'wallet' | 'kyc' | 'referrals' | 'statements' | 'preferences' | 'support'
   >('overview');
 
   // Profile Edit State
@@ -286,6 +291,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [tradeNotifications, setTradeNotifications] = useState(true);
   const [marketingUpdates, setMarketingUpdates] = useState(false);
+
+  // Customer Support
+  const [supportInput, setSupportInput] = useState<string>('');
+  const [supportMessages, setSupportMessages] = useState<{ from: 'user' | 'agent'; text: string; time: string }[]>([
+    { from: 'agent', text: 'Hi Alex! Welcome to XENA Customer Support. How can we help you today?', time: 'Just now' },
+  ]);
 
   const spotFiat = balances.availableXena * balances.usdRate;
   const investedFiat = balances.investedXena * balances.usdRate;
@@ -541,6 +552,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     setTimeout(() => setSavedNotice(null), 3000);
   };
 
+  const handleSendSupport = () => {
+    const text = supportInput.trim();
+    if (!text) return;
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setSupportMessages((prev) => [...prev, { from: 'user', text, time: now }]);
+    setSupportInput('');
+    setTimeout(() => {
+      setSupportMessages((prev) => [
+        ...prev,
+        { from: 'agent', text: 'Thanks for your message! A support specialist will review this and reply shortly. For urgent issues, please call our 24/7 line.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+      ]);
+    }, 1000);
+  };
+
   return (
     <div className="space-y-4 sm:space-y-8 animate-fade-in" id="profile-page-view">
       {/* Emergency Freeze Banner if Active */}
@@ -642,6 +667,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               { id: 'referrals', label: 'Affiliate & Referrals', icon: Users },
               { id: 'statements', label: 'Tax & Statements', icon: FileText },
               { id: 'preferences', label: 'Preferences', icon: Sliders },
+              { id: 'support', label: 'Customer Support', icon: Headphones },
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeSubTab === tab.id;
@@ -1345,6 +1371,94 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             <PrefToggle label="Trade & Staking Yield Notifications" hint="Daily summary of staking yields earned from vaults" checked={tradeNotifications} onChange={setTradeNotifications} />
             <PrefToggle label="Marketing & Ecosystem Announcements" hint="New yield vault releases and market insights" checked={marketingUpdates} onChange={setMarketingUpdates} />
           </ProfileSection>
+        </div>
+      )}
+
+      {/* ============ CUSTOMER SUPPORT ============ */}
+      {activeSubTab === 'support' && (
+        <div className="space-y-4 animate-fade-in">
+          <div className="bg-white border border-[#EDE9FE] rounded-[20px] p-5 sm:p-6 shadow-sm">
+            <div className="flex items-center gap-3 pb-4 border-b border-[#EDE9FE]">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#DB2777] text-white flex items-center justify-center shrink-0">
+                <LifeBuoy className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-sm font-extrabold text-[#171717]">Message Customer Care</h2>
+                <p className="text-[11px] text-[#6B7280]">24/7 live human assistance · Avg. reply <span className="font-bold text-[#6D28D9]">~30 seconds</span></p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-100 flex items-center gap-1 shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Online
+              </span>
+            </div>
+
+            <div className="mt-4 space-y-3 max-h-[360px] overflow-y-auto pr-1">
+              {supportMessages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div
+                    className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed ${
+                      msg.from === 'user'
+                        ? 'bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white rounded-br-sm'
+                        : 'bg-[#F8F7FC] border border-[#EDE9FE] text-[#171717] rounded-bl-sm'
+                    }`}
+                  >
+                    <span className="block">{msg.text}</span>
+                    <span className={`block mt-1 text-[9px] ${msg.from === 'user' ? 'text-purple-100' : 'text-[#9CA3AF]'}`}>{msg.time}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 flex items-center gap-2">
+              <button
+                onClick={() => setSavedNotice('Initiating a live call with a support agent...')}
+                className="shrink-0 w-10 h-10 rounded-xl bg-[#F8F7FC] hover:bg-purple-50 border border-[#EDE9FE] text-[#6D28D9] flex items-center justify-center transition-colors cursor-pointer"
+                title="Call support"
+              >
+                <Headphones className="w-4 h-4" />
+              </button>
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={supportInput}
+                  onChange={(e) => setSupportInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSendSupport(); }}
+                  placeholder="Type a message to customer care..."
+                  className="w-full px-4 py-2.5 text-xs text-[#171717] bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl focus:outline-none focus:border-[#7C3AED] focus:bg-white transition-all pr-11"
+                />
+              </div>
+              <button
+                onClick={handleSendSupport}
+                disabled={!supportInput.trim()}
+                className="shrink-0 h-10 px-4 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white text-xs font-bold flex items-center gap-1.5 transition-all hover:opacity-95 disabled:opacity-40 cursor-pointer"
+              >
+                <Send className="w-3.5 h-3.5" /> Send
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              { icon: MessageCircle, title: 'Live Chat', desc: 'Real-time human replies, 24/7', accent: 'bg-purple-50 text-[#7C3AED]' },
+              { icon: Mail, title: 'Support Email', desc: 'support@xena.exchange', accent: 'bg-blue-50 text-blue-600' },
+              { icon: Clock3, title: 'Ticket Response', desc: 'Typical resolution under 1 hour', accent: 'bg-amber-50 text-amber-600' },
+              { icon: ShieldCheck, title: 'Dispute Center', desc: 'Open a mediation ticket for any trade', accent: 'bg-emerald-50 text-emerald-600' },
+            ].map(({ icon: Icon, title, desc, accent }) => (
+              <button
+                key={title}
+                onClick={() => setSavedNotice(`${title}: ${desc}. A specialist will reach out.`)}
+                className="flex items-center gap-3 p-4 bg-white border border-[#EDE9FE] hover:border-purple-200 rounded-2xl text-left transition-all cursor-pointer group"
+              >
+                <span className={`w-10 h-10 rounded-xl ${accent} flex items-center justify-center shrink-0`}>
+                  <Icon className="w-5 h-5" />
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-xs font-bold text-[#171717]">{title}</span>
+                  <span className="block text-[10px] text-[#6B7280] truncate">{desc}</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-[#6B7280] group-hover:text-[#6D28D9] group-hover:translate-x-0.5 transition-all shrink-0" />
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
