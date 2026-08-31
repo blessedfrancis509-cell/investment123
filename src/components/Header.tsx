@@ -172,6 +172,18 @@ export const Header: React.FC<HeaderProps> = ({
                       <Settings className="w-4 h-4 text-[#7C3AED]" />
                       Account Settings
                     </button>
+                    {user.role === 'admin' && (
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          onSelectTab('admin');
+                        }}
+                        className="w-full px-4 py-2 text-left text-xs font-semibold text-[#171717] hover:bg-[#F8F7FC] flex items-center gap-2 cursor-pointer"
+                      >
+                        <Shield className="w-4 h-4 text-slate-700" />
+                        Admin Panel
+                      </button>
+                    )}
                   </div>
 
                   <div className="py-1 border-t border-[#EDE9FE]">

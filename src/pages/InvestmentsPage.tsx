@@ -23,114 +23,82 @@ const CATEGORY_META: Record<string, { label: string; accent: string; grad: strin
 
 const defaultMeta = { label: 'Investment Plan', accent: 'bg-purple-50 text-[#6D28D9] border-purple-100', grad: 'from-purple-500 to-fuchsia-500', glow: 'shadow-purple-200/40' };
 
+// ---- Currency configuration (base = USD) ----
+const FX_RATES: Record<string, number> = { USD: 1, EUR: 0.92, GBP: 0.79, NGN: 1500 };
+const FX_SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', NGN: '₦' };
+
 const catalogPlans = [
   {
+    id: 'cat-flex',
+    name: 'Micro Starter',
+    category: 'Flexible',
+    apy: 12.0,
+    duration: 'Flexible',
+    days: 0,
+    priceUsd: 3,
+    badge: 'Instant Redeem',
+    risk: 'Low Risk',
+    description: 'A tiny low-pressure entry point. Withdraw any time, yield compounds daily.',
+  },
+  {
     id: 'cat-2wk-sprint',
-    name: '2-Week Fast-Track Sprint Vault',
+    name: '2-Week Sprint',
     category: '2-Week (14D)',
-    apy: 26.5,
+    apy: 20.0,
     duration: '2-Week Lock',
     days: 14,
-    minDeposit: 50,
+    priceUsd: 10,
     badge: '⚡ 2-Week',
-    risk: 'Audited Contract',
-    description: 'Rapid 14-day lockup with accelerated validator yield and withdrawal at maturity.',
+    risk: 'Audited',
+    description: 'A fast 14-day lock with a friendly APY boost on your starter amount.',
   },
   {
     id: 'cat-2wk-surge',
-    name: '2-Week Validator Surge Pool',
+    name: '2-Week Surge',
     category: '2-Week (14D)',
-    apy: 28.4,
+    apy: 24.0,
     duration: '2-Week Lock',
     days: 14,
-    minDeposit: 100,
+    priceUsd: 15,
     badge: 'High Yield',
-    risk: 'Protected Principal',
-    description: 'Proof-of-stake delegation with 14-day epoch compounding and payout on maturity.',
-  },
-  {
-    id: 'cat-2wk-arbitrage',
-    name: '2-Week DeFi Arbitrage Matrix',
-    category: '2-Week (14D)',
-    apy: 31.5,
-    duration: '2-Week Lock',
-    days: 14,
-    minDeposit: 200,
-    badge: 'Trending',
-    risk: 'Algorithmic Hedge',
-    description: 'Cross-DEX spread capture locked for a 2-week window with payout at day 14.',
-  },
-  {
-    id: 'cat-2wk-bridge',
-    name: '2-Week Multi-Chain Bridge Vault',
-    category: '2-Week (14D)',
-    apy: 24.8,
-    duration: '2-Week Lock',
-    days: 14,
-    minDeposit: 25,
-    badge: 'Low Min',
-    risk: 'Insured Pool',
-    description: 'Short-term liquidity for cross-chain bridge relays with no impermanent loss.',
-  },
-  {
-    id: 'cat-flex',
-    name: 'Flexible Staking Vault',
-    category: 'Flexible',
-    apy: 18.5,
-    duration: 'Flexible',
-    days: 0,
-    minDeposit: 10,
-    badge: 'Instant Redeem',
-    risk: 'Low Risk',
-    description: 'Deposit and withdraw anytime. Yield accrues block-by-block, compounding daily.',
+    risk: 'Protected',
+    description: 'Proof-of-stake delegation with 14-day compounding and payout at maturity.',
   },
   {
     id: 'cat-30d',
-    name: '30-Day Growth Vault',
+    name: '30-Day Growth',
     category: 'Fixed Term',
-    apy: 24.2,
+    apy: 28.0,
     duration: '30-Day Lock',
     days: 30,
-    minDeposit: 50,
+    priceUsd: 23,
     badge: 'Popular',
     risk: 'Audited Strategy',
-    description: 'Automated market maker routing delivering amplified monthly yield.',
+    description: 'A balanced one-month vault routing liquidity for steady amplified yield.',
+  },
+  {
+    id: 'cat-45d',
+    name: '45-Day Momentum',
+    category: 'Fixed Term',
+    apy: 34.0,
+    duration: '45-Day Lock',
+    days: 45,
+    priceUsd: 35,
+    badge: 'Trending',
+    risk: 'Hedged',
+    description: 'A mid-term play blending validator yield with defensive hedging.',
   },
   {
     id: 'cat-90d',
-    name: '90-Day VIP Vault',
+    name: 'VIP Boost',
     category: 'VIP Tier',
-    apy: 32.0,
+    apy: 42.0,
     duration: '90-Day Lock',
     days: 90,
-    minDeposit: 250,
+    priceUsd: 40,
     badge: 'High APY',
     risk: 'Protected',
-    description: 'Exclusive tier with institutional revenue share and governance multipliers.',
-  },
-  {
-    id: 'cat-lp',
-    name: 'XENA-USDT Liquidity Farm',
-    category: 'Liquidity',
-    apy: 45.5,
-    duration: '60-Day Lock',
-    days: 60,
-    minDeposit: 500,
-    badge: 'Max Yield',
-    risk: 'Auto Rebalance',
-    description: 'Dual-asset liquidity provision with automated impermanent loss mitigation.',
-  },
-  {
-    id: 'cat-180d',
-    name: '180-Day Institutional Vault',
-    category: 'Institutional',
-    apy: 52.0,
-    duration: '180-Day Lock',
-    days: 180,
-    minDeposit: 1000,
-    badge: 'Whale Tier',
-    risk: 'Insured Pool',
-    description: 'Validator delegation with slashing insurance and validator rewards.',
+    description: 'The top tier — institutional revenue share with maximum compounding power.',
   },
 ];
 
@@ -147,7 +115,14 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
   const [claimedNotice, setClaimedNotice] = useState<string | null>(null);
   const [stakedNotice, setStakedNotice] = useState<string | null>(null);
   const [showSupportModal, setShowSupportModal] = useState<boolean>(false);
+  const [currency, setCurrency] = useState<string>('NGN');
   const stakedTimer = useRef<number | null>(null);
+
+  const xenaUsdPrice = balances.currentPrice || 2.85;
+  const fxRate = FX_RATES[currency] ?? 1;
+  const fxSymbol = FX_SYMBOLS[currency] ?? '$';
+  const formatFiat = (usd: number, dp = 2) => `${fxSymbol}${(usd * fxRate).toLocaleString(undefined, { minimumFractionDigits: dp, maximumFractionDigits: dp })}`;
+  const formatXena = (usd: number) => `${(usd / xenaUsdPrice).toLocaleString(undefined, { maximumFractionDigits: 4 })} XENA`;
 
   const notifyStake = (planName: string) => {
     setStakedNotice(`${planName} activated — its progress now shows in your Staking Performance card above.`);
@@ -241,12 +216,12 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
           <div className="p-2.5 bg-violet-50/60 rounded-xl border border-violet-100">
             <span className="text-[9px] text-violet-600 uppercase font-bold block">Staked</span>
             <span className="text-sm font-extrabold text-violet-900 font-mono block mt-0.5">{totalInvested.toLocaleString()} XENA</span>
-            <span className="text-[9px] text-violet-500 block mt-0.5">≈ ${(totalInvested * balances.usdRate).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            <span className="text-[9px] text-violet-500 block mt-0.5">≈ {formatFiat(totalInvested * xenaUsdPrice, 0)}</span>
           </div>
           <div className="p-2.5 bg-emerald-50/60 rounded-xl border border-emerald-100">
             <span className="text-[9px] text-emerald-600 uppercase font-bold block">Earned</span>
             <span className="text-sm font-extrabold text-emerald-600 font-mono block mt-0.5">+{totalEarned.toFixed(2)}</span>
-            <span className="text-[9px] text-emerald-500 block mt-0.5">+${(totalEarned * balances.usdRate).toFixed(2)}</span>
+            <span className="text-[9px] text-emerald-500 block mt-0.5">+{formatFiat(totalEarned * xenaUsdPrice)}</span>
           </div>
           <div className="p-2.5 bg-sky-50/60 rounded-xl border border-sky-100">
             <span className="text-[9px] text-sky-600 uppercase font-bold block">Avg APY</span>
@@ -308,89 +283,94 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
             <h2 className="text-sm font-bold bg-gradient-to-r from-[#6D28D9] via-[#7C3AED] to-[#C026D3] bg-clip-text text-transparent">Explore Vault Packages</h2>
             <p className="text-[10px] text-[#6B7280]">Buy a package — it appears instantly at the top of this page with live progress</p>
           </div>
-          <div className="flex flex-wrap bg-[#F8F7FC] p-0.5 rounded-lg border border-[#EDE9FE] self-start sm:self-auto gap-0.5">
-            {[
-              { id: 'all', label: 'All' },
-              { id: '2-week', label: '⚡ 2-Week' },
-              { id: 'flexible', label: 'Flexible' },
-              { id: 'fixed', label: 'Fixed' },
-              { id: 'vip', label: 'VIP' },
-              { id: 'liquidity', label: 'Liquidity' },
-            ].map((cat) => (
-              <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${activeCategory === cat.id ? 'bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white shadow-sm shadow-fuchsia-200/60' : 'text-[#6B7280] hover:text-[#171717]'}`}>
-                {cat.label}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <div className="flex items-center bg-[#F8F7FC] p-0.5 rounded-lg border border-[#EDE9FE] text-[10px] font-bold">
+              {['NGN', 'USD', 'EUR', 'GBP'].map((cur) => (
+                <button key={cur} onClick={() => setCurrency(cur)}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${currency === cur ? 'bg-[#6D28D9] text-white shadow-sm' : 'text-[#6B7280] hover:text-[#171717]'}`}>
+                  {cur}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap bg-white p-0.5 rounded-lg border border-[#EDE9FE] gap-0.5">
+              {[
+                { id: 'all', label: 'All' },
+                { id: '2-week', label: '⚡ 2-Week' },
+                { id: 'flexible', label: 'Flexible' },
+                { id: 'fixed', label: 'Fixed' },
+                { id: 'vip', label: 'VIP' },
+              ].map((cat) => (
+                <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                  className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${activeCategory === cat.id ? 'bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white shadow-sm shadow-fuchsia-200/60' : 'text-[#6B7280] hover:text-[#171717]'}`}>
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredCatalog.map((plan) => {
             const meta = CATEGORY_META[plan.category] || defaultMeta;
             // Prevent buying a package that is already active (dedupe by name)
             const alreadyActive = plans.some((p) => p.name === plan.name);
+            const xenaQty = plan.priceUsd / xenaUsdPrice;
             return (
-              <div key={plan.id} className="bg-white border border-[#EDE9FE] rounded-[16px] overflow-hidden shadow-xs hover:shadow-lg hover:bg-gradient-to-b hover:from-white hover:to-purple-50/30 transition-all flex flex-col justify-between group">
-                <div className={`h-1.5 bg-gradient-to-r ${meta.grad}`} />
-                <div className="p-3.5 flex flex-col justify-between gap-3 flex-1">
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <div>
-                        <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold border ${meta.accent}`}>{plan.category}</span>
-                        <h3 className="text-xs font-bold text-[#171717] mt-1.5 leading-snug group-hover:text-[#6D28D9] transition-colors">{plan.name}</h3>
-                      </div>
-                      <span className={`relative text-[11px] font-extrabold bg-gradient-to-r ${meta.grad} text-white px-2 py-1 rounded-full shadow-md ${meta.glow} font-mono shrink-0`}>+{plan.apy}%</span>
-                    </div>
-
-                    <p className="text-[10px] text-[#6B7280] leading-relaxed mb-2">{plan.description}</p>
-
-                    <div className="grid grid-cols-3 gap-1.5 mb-2">
-                      <div className={`p-1.5 bg-gradient-to-br ${meta.grad} bg-opacity-10 rounded-lg border ${plan.category === 'Flexible' ? 'border-emerald-100' : 'border-purple-100'} text-center`}>
-                        <span className="text-[8px] text-[#6B7280] block font-medium leading-none">Lock</span>
-                        <span className="font-bold text-[#171717] text-[10px]">{plan.duration}</span>
-                      </div>
-                      <div className="p-1.5 bg-[#F8F7FC] rounded-lg border border-[#EDE9FE] text-center">
-                        <span className="text-[8px] text-[#6B7280] block font-medium leading-none">Min</span>
-                        <span className="font-bold text-[#171717] text-[10px]">{plan.minDeposit} XENA</span>
-                      </div>
-                      <div className="p-1.5 bg-[#F8F7FC] rounded-lg border border-[#EDE9FE] text-center">
-                        <span className="text-[8px] text-[#6B7280] block font-medium leading-none">Risk</span>
-                        <span className="font-bold text-[#171717] text-[10px]">{plan.risk}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between px-2 py-1 rounded-md bg-emerald-50/60 border border-emerald-100 mb-1">
-                      <span className="text-[9px] text-emerald-800 font-bold">APY Badge</span>
-                      <span className="text-[9px] font-bold text-[#6D28D9]">{plan.badge}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      const ok = onStakeNewPlan({
-                        id: plan.id,
-                        name: plan.name,
-                        category: plan.category,
-                        investedAmount: Math.max(plan.minDeposit, 100),
-                        earnedAmount: 0,
-                        projectedReturnPercent: plan.apy,
-                        daysRemaining: plan.days,
-                        totalDays: plan.days,
-                        progressPercent: 0,
-                      });
-                      if (ok) notifyStake(plan.name);
-                    }}
-                    disabled={alreadyActive}
-                    className={`w-full py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95 ${alreadyActive ? 'bg-[#F8F7FC] text-[#6B7280] border border-[#EDE9FE] cursor-not-allowed' : `bg-gradient-to-r ${meta.grad} text-white shadow-md ${meta.glow} hover:opacity-95`}`}
-                  >
-                    {alreadyActive ? (
-                      <><Check className="w-3 h-3" /> Already Active</>
-                    ) : (
-                      <><Plus className="w-3.5 h-3.5" /> Stake Now ({plan.duration})</>
-                    )}
-                  </button>
+              <div key={plan.id} className="group relative bg-white border border-[#EDE9FE] rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col p-4">
+                <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${meta.grad}`} />
+                <div className="flex items-start justify-between gap-2">
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${meta.accent}`}>{plan.category}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r ${meta.grad} text-white shadow-sm ${meta.glow}`}>+{plan.apy}% APY</span>
                 </div>
+
+                <h3 className="text-sm font-extrabold text-[#171717] mt-2.5">{plan.name}</h3>
+                <p className="text-[10px] text-[#6B7280] leading-relaxed mt-1">{plan.description}</p>
+
+                <div className="mt-3 mb-3">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[22px] font-black text-[#171717] font-mono leading-none">{formatFiat(plan.priceUsd)}</span>
+                    <span className="text-[9px] text-[#6B7280]">/ package</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md bg-[#F8F7FC] border border-[#EDE9FE] text-[10px] font-bold text-[#6D28D9]">
+                    ≈ {formatXena(plan.priceUsd)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 mb-3 text-center">
+                  <div className="bg-[#F8F7FC] rounded-lg border border-[#EDE9FE] py-1.5">
+                    <span className="text-[8px] text-[#6B7280] block font-medium leading-none">Lock</span>
+                    <span className="font-bold text-[#171717] text-[10px] block mt-0.5">{plan.duration}</span>
+                  </div>
+                  <div className="bg-[#F8F7FC] rounded-lg border border-[#EDE9FE] py-1.5">
+                    <span className="text-[8px] text-[#6B7280] block font-medium leading-none">Risk</span>
+                    <span className="font-bold text-[#171717] text-[10px] block mt-0.5">{plan.risk}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    const ok = onStakeNewPlan({
+                      id: plan.id,
+                      name: plan.name,
+                      category: plan.category,
+                      investedAmount: xenaQty,
+                      earnedAmount: 0,
+                      projectedReturnPercent: plan.apy,
+                      daysRemaining: plan.days,
+                      totalDays: plan.days,
+                      progressPercent: 0,
+                    });
+                    if (ok) notifyStake(plan.name);
+                  }}
+                  disabled={alreadyActive}
+                  className={`w-full py-2.5 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95 mt-auto ${alreadyActive ? 'bg-[#F8F7FC] text-[#6B7280] border border-[#EDE9FE] cursor-not-allowed' : `bg-gradient-to-r ${meta.grad} text-white shadow-sm ${meta.glow} hover:opacity-95`}`}
+                >
+                  {alreadyActive ? (
+                    <><Check className="w-3.5 h-3.5" /> Already Active</>
+                  ) : (
+                    <><Plus className="w-3.5 h-3.5" /> Stake {formatXena(plan.priceUsd)}</>
+                  )}
+                </button>
               </div>
             );
           })}
@@ -414,7 +394,7 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
             <div>
               <div className="flex justify-between text-[10px] text-[#6B7280] mb-1 font-semibold">
                 <span>Deposit Amount</span>
-                <span>{calcAmount.toLocaleString()} XENA ≈ ${(calcAmount * balances.usdRate).toLocaleString()}</span>
+                <span>{calcAmount.toLocaleString()} XENA ≈ {formatFiat(calcAmount * xenaUsdPrice)}</span>
               </div>
               <input type="range" min="50" max="50000" step="50" value={calcAmount} onChange={(e) => setCalcAmount(parseFloat(e.target.value))} className="w-full accent-[#7C3AED] cursor-pointer" />
             </div>
@@ -455,7 +435,7 @@ export const InvestmentsPage: React.FC<InvestmentsPageProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-purple-100">Fiat at Maturity</span>
-                <span className="font-bold text-white font-mono">${((calcAmount + calculatedReturn) * balances.usdRate).toFixed(2)}</span>
+                <span className="font-bold text-white font-mono">{formatFiat((calcAmount + calculatedReturn) * xenaUsdPrice)}</span>
               </div>
             </div>
             <div className="pt-2 border-t border-white/20 flex items-center justify-between">

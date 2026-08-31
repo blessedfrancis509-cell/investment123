@@ -4,9 +4,10 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Zap, Sparkles, Check,
 interface LoginPageProps {
   onNavigateTab: (tab: string) => void;
   onLoginSuccess?: () => void;
+  onAdminLogin?: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSuccess }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSuccess, onAdminLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -27,6 +28,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSucc
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
+      const isAdmin = email.trim().toLowerCase() === 'admin@xena.fi' && password === 'xena-admin-demo';
+      if (isAdmin && onAdminLogin) {
+        onAdminLogin();
+        return;
+      }
       onLoginSuccess ? onLoginSuccess() : onNavigateTab('home');
     }, 900);
   };
@@ -39,6 +45,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSucc
     setTimeout(() => {
       setLoading(false);
       onLoginSuccess ? onLoginSuccess() : onNavigateTab('home');
+    }, 600);
+  };
+
+  const adminQuickLogin = () => {
+    setEmail('admin@xena.fi');
+    setPassword('xena-admin-demo');
+    setError(null);
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      onAdminLogin ? onAdminLogin() : onNavigateTab('home');
     }, 600);
   };
 
@@ -125,6 +142,37 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSucc
               className="w-full py-2.5 rounded-xl bg-[#6D28D9] hover:bg-[#5B21B6] text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
               <Zap className="w-3.5 h-3.5" /> One-Click Demo Login
+            </button>
+          </div>
+
+          {/* Admin demo access */}
+          <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50/80 to-white p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center">
+                <ShieldCheck className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs font-extrabold text-[#171717]">Admin Panel Access</span>
+              <span className="ml-auto text-[9px] font-bold uppercase tracking-wider text-slate-600 bg-slate-200 px-2 py-0.5 rounded-full">
+                Staff only
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="p-2.5 rounded-xl bg-white border border-[#EDE9FE]">
+                <p className="text-[9px] font-bold text-[#9CA3AF] uppercase tracking-wide">Email</p>
+                <p className="font-mono font-bold text-[#171717] mt-0.5">admin@xena.fi</p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white border border-[#EDE9FE]">
+                <p className="text-[9px] font-bold text-[#9CA3AF] uppercase tracking-wide">Password</p>
+                <p className="font-mono font-bold text-[#171717] mt-0.5">xena-admin-demo</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={adminQuickLogin}
+              disabled={loading}
+              className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" /> One-Click Admin Login
             </button>
           </div>
 

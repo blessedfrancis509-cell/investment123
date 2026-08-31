@@ -35,6 +35,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
+import { AdminPanel } from './pages/AdminPanel';
 
 // Modals
 import { DepositWithdrawModal } from './components/modals/DepositWithdrawModal';
@@ -454,10 +455,22 @@ export default function App() {
         );
 
       case 'login':
-        return <LoginPage onNavigateTab={handleNavSelect} onLoginSuccess={() => handleNavSelect('home')} />;
+        return (
+          <LoginPage
+            onNavigateTab={handleNavSelect}
+            onLoginSuccess={() => handleNavSelect('home')}
+            onAdminLogin={() => {
+              setUser((prev) => ({ ...prev, role: 'admin', name: 'Administrator', email: 'admin@xena.fi' }));
+              handleNavSelect('admin');
+            }}
+          />
+        );
 
       case 'signup':
         return <SignupPage onNavigateTab={handleNavSelect} onSignupSuccess={() => handleNavSelect('home')} />;
+
+      case 'admin':
+        return <AdminPanel onNavigateTab={handleNavSelect} />;
 
       default:
         return (

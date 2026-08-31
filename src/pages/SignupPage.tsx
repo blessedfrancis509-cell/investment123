@@ -1,10 +1,26 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Zap, Sparkles, Check, Loader2, User, Gift, Loader2 as Spinner } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Zap, Sparkles, Check, Loader2, User, Gift, Globe, Calendar, ChevronDown, Sparkle, Coins, Rocket } from 'lucide-react';
 
 interface SignupPageProps {
   onNavigateTab: (tab: string) => void;
   onSignupSuccess?: () => void;
 }
+
+const COUNTRIES = [
+  'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Egypt', 'Morocco', 'Ethiopia', 'Tanzania', 'Uganda', 'Senegal', 'Cameroon', 'Ivory Coast', 'Rwanda', 'Zambia', 'Zimbabwe', 'Botswana',
+  'United States', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Colombia', 'Chile', 'Peru', 'Venezuela', 'Ecuador', 'Costa Rica', 'Panama', 'Dominican Republic',
+  'United Kingdom', 'France', 'Germany', 'Spain', 'Italy', 'Portugal', 'Netherlands', 'Belgium', 'Switzerland', 'Austria', 'Ireland', 'Poland', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Greece', 'Czech Republic', 'Romania', 'Ukraine',
+  'Saudi Arabia', 'United Arab Emirates', 'Qatar', 'Kuwait', 'Turkey', 'Israel', 'Jordan', 'Lebanon', 'Oman', 'Bahrain',
+  'India', 'Pakistan', 'Bangladesh', 'Sri Lanka', 'Nepal', 'Indonesia', 'Malaysia', 'Singapore', 'Thailand', 'Vietnam', 'Philippines', 'China', 'Japan', 'South Korea', 'Hong Kong', 'Taiwan', 'Australia', 'New Zealand', 'Kazakhstan', 'Uzbekistan',
+];
+
+const PHONE_PREFIXES: Record<string, string> = {
+  'Nigeria': '+234', 'Ghana': '+233', 'Kenya': '+254', 'South Africa': '+27', 'Egypt': '+20', 'Morocco': '+212', 'Ethiopia': '+251', 'Tanzania': '+255', 'Uganda': '+256', 'Senegal': '+221', 'Cameroon': '+237', 'Ivory Coast': '+225', 'Rwanda': '+250', 'Zambia': '+260', 'Zimbabwe': '+263', 'Botswana': '+267',
+  'United States': '+1', 'Canada': '+1', 'Mexico': '+52', 'Brazil': '+55', 'Argentina': '+54', 'Colombia': '+57', 'Chile': '+56', 'Peru': '+51', 'Venezuela': '+58', 'Ecuador': '+593', 'Costa Rica': '+506', 'Panama': '+507', 'Dominican Republic': '+1',
+  'United Kingdom': '+44', 'France': '+33', 'Germany': '+49', 'Spain': '+34', 'Italy': '+39', 'Portugal': '+351', 'Netherlands': '+31', 'Belgium': '+32', 'Switzerland': '+41', 'Austria': '+43', 'Ireland': '+353', 'Poland': '+48', 'Sweden': '+46', 'Norway': '+47', 'Denmark': '+45', 'Finland': '+358', 'Greece': '+30', 'Czech Republic': '+420', 'Romania': '+40', 'Ukraine': '+380',
+  'Saudi Arabia': '+966', 'United Arab Emirates': '+971', 'Qatar': '+974', 'Kuwait': '+965', 'Turkey': '+90', 'Israel': '+972', 'Jordan': '+962', 'Lebanon': '+961', 'Oman': '+968', 'Bahrain': '+973',
+  'India': '+91', 'Pakistan': '+92', 'Bangladesh': '+880', 'Sri Lanka': '+94', 'Nepal': '+977', 'Indonesia': '+62', 'Malaysia': '+60', 'Singapore': '+65', 'Thailand': '+66', 'Vietnam': '+84', 'Philippines': '+63', 'China': '+86', 'Japan': '+81', 'South Korea': '+82', 'Hong Kong': '+852', 'Taiwan': '+886', 'Australia': '+61', 'New Zealand': '+64', 'Kazakhstan': '+7', 'Uzbekistan': '+998',
+};
 
 export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupSuccess }) => {
   const [name, setName] = useState('');
@@ -17,6 +33,10 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupS
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [country, setCountry] = useState('');
+  const [phone, setPhone] = useState('');
+  const [dob, setDob] = useState('');
+  const [showExplainer, setShowExplainer] = useState(false);
 
   const inputCls =
     'w-full bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl px-3.5 py-2.5 text-xs font-semibold text-[#171717] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED] focus:bg-white transition-all placeholder:text-[#9CA3AF]';
@@ -26,6 +46,23 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupS
     setError(null);
     if (!name.trim() || !email.trim() || !password.trim()) {
       setError('Please complete all required fields to create your account.');
+      return;
+    }
+    if (!country) {
+      setError('Please select your country of residence.');
+      return;
+    }
+    if (phone.trim().length < 6) {
+      setError('Please enter a valid phone number.');
+      return;
+    }
+    if (!dob) {
+      setError('Please enter your date of birth.');
+      return;
+    }
+    const age = Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+    if (isNaN(age) || age < 18) {
+      setError('You must be at least 18 years old to create an account.');
       return;
     }
     if (password.length < 8) {
@@ -44,9 +81,6 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupS
     setTimeout(() => {
       setLoading(false);
       setDone(true);
-      setTimeout(() => {
-        onSignupSuccess ? onSignupSuccess() : onNavigateTab('home');
-      }, 1400);
     }, 900);
   };
 
@@ -116,13 +150,26 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupS
 
         <div className="max-w-sm w-full mx-auto space-y-4">
           {done ? (
-            <div className="flex flex-col items-center justify-center text-center space-y-3 py-10 animate-scale-up">
+            <div className="flex flex-col items-center justify-center text-center space-y-4 py-8 animate-scale-up">
               <div className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-300 flex items-center justify-center">
                 <Check className="w-8 h-8 text-green-600" strokeWidth={3} />
               </div>
-              <h2 className="text-lg font-extrabold text-[#171717]">Account created!</h2>
-              <p className="text-xs text-[#6B7280]">Welcome aboard. Loading your secure dashboard…</p>
-              <Spinner className="w-5 h-5 text-[#7C3AED] animate-spin" />
+              <div>
+                <h2 className="text-lg font-extrabold text-[#171717]">Welcome, {name.split(' ')[0] || 'onboard'}! 🎉</h2>
+                <p className="text-xs text-[#6B7280] mt-1">Your XENA account has been created successfully.</p>
+              </div>
+              <button
+                onClick={() => setShowExplainer(true)}
+                className="w-full py-2.5 rounded-xl bg-purple-50 border border-purple-200 text-[#6D28D9] font-bold text-xs flex items-center justify-center gap-2 hover:bg-purple-100 transition-colors cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" /> What is the XENA coin?
+              </button>
+              <button
+                onClick={() => (onSignupSuccess ? onSignupSuccess() : onNavigateTab('home'))}
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white font-bold text-xs flex items-center justify-center gap-2 hover:opacity-95 transition-all cursor-pointer shadow-sm"
+              >
+                Enter Dashboard <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           ) : (
             <>
@@ -158,6 +205,56 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupS
                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={`${inputCls} pl-9`} />
                   </div>
                 </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-[#171717] block mb-1">Country of Residence <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <Globe className="w-4 h-4 text-[#9CA3AF] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <select
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className={`${inputCls} pl-9 appearance-none cursor-pointer ${country ? 'text-[#171717]' : 'text-[#9CA3AF]'}`}
+                    >
+                      <option value="" disabled>Select your country</option>
+                      {COUNTRIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-[#9CA3AF] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-[#171717] block mb-1">Phone Number <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#6B7280]">
+                      {PHONE_PREFIXES[country] || '+000'}
+                    </span>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/[^0-9 ]/g, ''))}
+                      placeholder="800 000 0000"
+                      className={`${inputCls} ${country ? 'pl-[4.5rem]' : 'pl-9'}`}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-[#171717] block mb-1">Date of Birth <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <Calendar className="w-4 h-4 text-[#9CA3AF] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="date"
+                      value={dob}
+                      max={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setDob(e.target.value)}
+                      className={`${inputCls} pl-9 ${dob ? 'text-[#171717]' : 'text-[#9CA3AF]'}`}
+                    />
+                  </div>
+                </div>
+
+                <p className="text-[9px] text-[#9CA3AF] -mt-1">We support users in 80+ countries. KYC verification is required to unlock withdrawals.</p>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -233,6 +330,67 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupS
           )}
         </div>
       </div>
+
+      {/* ===== XENA COIN EXPLAINER POPUP ===== */}
+      {showExplainer && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-white rounded-[24px] shadow-2xl border border-[#EDE9FE] overflow-hidden animate-scale-up">
+            <div className="h-1.5 bg-gradient-to-r from-[#7C3AED] via-[#A855F7] to-[#DB2777]" />
+            <button
+              onClick={() => setShowExplainer(false)}
+              className="absolute right-3.5 top-3.5 w-8 h-8 rounded-full bg-[#F8F7FC] hover:bg-[#EDE9FE] text-[#6B7280] font-bold flex items-center justify-center cursor-pointer transition-colors"
+            >
+              ✕
+            </button>
+
+            <div className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#7C3AED] via-[#6D28D9] to-[#A855F7] text-white flex items-center justify-center shadow-[0_4px_16px_rgba(109,40,217,0.35)]">
+                  <Coins className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-[#171717]">Meet XENA</h3>
+                  <p className="text-[10px] text-[#6B7280]">The coin powering the XENA Exchange ecosystem</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#6B7280] leading-relaxed mt-4">
+                <strong className="text-[#171717]">XENA</strong> is the native token of the XENA Exchange platform. It's the fuel that powers real-time trading, staking vaults, and every yield you earn.
+              </p>
+
+              <div className="space-y-2.5 mt-4">
+                {[
+                  { icon: Rocket, title: 'Earn up to 52% APY', desc: 'Stake XENA in vaults and let your holdings compound daily.' },
+                  { icon: Zap, title: 'Trade with 0% fees', desc: 'Pay for P2P and spot trades using XENA at no maker cost.' },
+                  { icon: Sparkle, title: 'Real utility', desc: 'Use XENA for governance votes, fee discounts and rewards.' },
+                ].map(({ icon: Icon, title, desc }) => (
+                  <div key={title} className="flex items-start gap-2.5 p-3 rounded-xl bg-[#F8F7FC] border border-[#EDE9FE]">
+                    <span className="w-8 h-8 shrink-0 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#A855F7] text-white flex items-center justify-center">
+                      <Icon className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <span className="block text-xs font-bold text-[#171717]">{title}</span>
+                      <span className="block text-[10px] text-[#6B7280] mt-0.5 leading-snug">{desc}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 p-3 rounded-xl bg-purple-50/70 border border-purple-100 text-[10px] text-[#6B7280] flex items-start gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-[#6D28D9] shrink-0 mt-0.5" />
+                <span>Your account ships with a <strong className="text-[#6D28D9]">$25 XENA signup bonus</strong> — claim it on your first deposit.</span>
+              </div>
+
+              <button
+                onClick={() => (onSignupSuccess ? onSignupSuccess() : onNavigateTab('home'))}
+                className="w-full mt-4 py-2.5 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#A855F7] text-white font-bold text-xs flex items-center justify-center gap-2 hover:opacity-95 transition-all cursor-pointer"
+              >
+                Got it — Enter Dashboard <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

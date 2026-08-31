@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, TrendingUp, ShieldCheck, Users, PiggyBank, Clock3, Wallet, Sparkles, Plus, Check } from 'lucide-react';
+import { ArrowRight, TrendingUp, ShieldCheck, Users, PiggyBank, Clock3, Wallet, Sparkles, Plus, Check, Newspaper, Calendar } from 'lucide-react';
 import { UserProfile, UserBalances, MarketStats, InvestmentPlan, Transaction, P2POffer } from '../types';
 import { WelcomeSection } from '../components/WelcomeSection';
 import { MainBalanceCard } from '../components/MainBalanceCard';
@@ -7,6 +7,7 @@ import { QuickActions } from '../components/QuickActions';
 import { AnnouncementCard } from '../components/AnnouncementCard';
 import { BonusCodeSection } from '../components/BonusCodeSection';
 import { XenaTokenBadge } from '../components/XenaLogo';
+import { INITIAL_ANNOUNCEMENTS } from '../data/initialData';
 
 interface HomePageProps {
   user: UserProfile;
@@ -70,6 +71,48 @@ export const HomePage: React.FC<HomePageProps> = ({
 
       {/* 5. Announcement Highlight */}
       <AnnouncementCard onExploreP2P={() => onNavigateTab('p2p')} />
+
+      {/* 5.5 News Header — Latest Announcements */}
+      <div className="bg-white border border-[#EDE9FE] rounded-[24px] p-5 shadow-sm">
+        <div className="flex items-center justify-between pb-3 border-b border-[#EDE9FE]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#A855F7] text-white flex items-center justify-center shrink-0">
+              <Newspaper className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#171717]">Latest News &amp; Announcements</h3>
+              <p className="text-[11px] text-[#6B7280]">Stay updated on campaigns, staking and protocol upgrades</p>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigateTab('announcements')}
+            className="text-xs font-bold text-[#6D28D9] hover:underline flex items-center gap-1 cursor-pointer shrink-0"
+          >
+            <span>View All</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+          {INITIAL_ANNOUNCEMENTS.slice(0, 4).map((ann) => (
+            <button
+              key={ann.id}
+              onClick={() => onNavigateTab('announcements')}
+              className="group text-left p-3 rounded-2xl bg-[#F8F7FC] hover:bg-purple-50 border border-[#EDE9FE] hover:border-purple-200 transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${ann.tagColor}`}>{ann.tag}</span>
+                <span className="text-[9px] text-[#6B7280] flex items-center gap-1">
+                  <Calendar className="w-3 h-3" /> {ann.date}
+                </span>
+              </div>
+              <span className="block text-xs font-bold text-[#171717] leading-snug group-hover:text-[#6D28D9] transition-colors line-clamp-2">
+                {ann.title}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* 6. Home Dashboard Highlights Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
