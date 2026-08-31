@@ -31,11 +31,21 @@ import {
   AlertTriangle,
   ClipboardList,
   Timer,
+  Banknote,
+  UserPlus,
+  BadgeCheck,
+  Ban,
+  Download,
+  Gift,
+  Copy,
+  KeyRound,
+  Gem,
 } from 'lucide-react';
 import { INITIAL_ANNOUNCEMENTS } from '../data/initialData';
 
 interface Props {
   onNavigateTab: (tab: string) => void;
+  registeredUsers?: { name: string; email: string; country: string; phone: string; dob: string; referrer: string }[];
 }
 
 const SEED_USERS = [
@@ -103,13 +113,31 @@ const VAULTS = [
   { category: 'Institutional', apy: 52.0, staked: 420000, plans: 64 },
 ];
 
+const SEED_DEPOSITS = [
+  { id: 'dep1', user: 'Alex Morgan', email: 'alex.morgan@xena.fi', method: 'USDT (TRC-20)', amount: 2500, unit: 'USD', xena: 8750, status: 'Completed', time: '2 min ago' },
+  { id: 'dep2', user: 'Omar Hassan', email: 'omar.h@xena.fi', method: 'Bank Transfer (AED)', amount: 8000, unit: 'USD', xena: 28000, status: 'Completed', time: '22 min ago' },
+  { id: 'dep3', user: 'David Chen', email: 'd.chen@xena.fi', method: 'BTC', amount: 400, unit: 'USD', xena: 1400, status: 'Completed', time: '1 hr ago' },
+  { id: 'dep4', user: 'Sara Mensah', email: 'sara.m@xena.fi', method: 'M-Pesa', amount: 200, unit: 'USD', xena: 700, status: 'Pending', time: '4 hrs ago' },
+  { id: 'dep5', user: 'Lina Kowalski', email: 'lina.k@xena.fi', method: 'EUR SEPA', amount: 1200, unit: 'USD', xena: 4200, status: 'Completed', time: '6 hrs ago' },
+  { id: 'dep6', user: 'Fatima Abubakar', email: 'fatima.a@xena.fi', method: 'NGN Bank Transfer', amount: 900, unit: 'USD', xena: 3150, status: 'Pending', time: '9 hrs ago' },
+];
+
+const SEED_REFERRALS = [
+  { id: 'r1', user: 'Fatima Abubakar', refCode: 'FATIMA-X', count: 24, earned: 360 },
+  { id: 'r2', user: 'Omar Hassan', refCode: 'OMAR-X', count: 41, earned: 615 },
+  { id: 'r3', user: 'Alex Morgan', refCode: 'ALEX-X', count: 18, earned: 270 },
+  { id: 'r4', user: 'Sara Mensah', refCode: 'SARA-X', count: 12, earned: 180 },
+  { id: 'r5', user: 'David Chen', refCode: 'DAVID-X', count: 6, earned: 90 },
+  { id: 'r6', user: 'Lina Kowalski', refCode: 'LINA-X', count: 9, earned: 135 },
+];
+
 const TxStatusTone: Record<string, string> = {
   Completed: 'bg-emerald-50 text-[#16A34A] border-emerald-100',
   Pending: 'bg-amber-50 text-amber-600 border-amber-100',
   Failed: 'bg-red-50 text-red-600 border-red-100',
 };
 
-export const AdminPanel: React.FC<Props> = ({ onNavigateTab }) => {
+export const AdminPanel: React.FC<Props> = ({ onNavigateTab, registeredUsers = [] }) => {
   const [section, setSection] = useState<string>('dashboard');
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -121,9 +149,13 @@ export const AdminPanel: React.FC<Props> = ({ onNavigateTab }) => {
   const [promos, setPromos] = useState(SEED_PROMOS);
   const [announcements, setAnnouncements] = useState(INITIAL_ANNOUNCEMENTS as any[]);
   const [audit, setAudit] = useState(SEED_AUDIT);
+  const [deposits, setDeposits] = useState(SEED_DEPOSITS);
+  const [referrals, setReferrals] = useState(SEED_REFERRALS);
+  const [bonusLog, setBonusLog] = useState<{ id: string; code: string; name: string; xena: number; time: string }[]>([]);
 
   const [userQuery, setUserQuery] = useState('');
   const [txFilter, setTxFilter] = useState('All');
+  const [depositFilter, setDepositFilter] = useState('All');
   const [ticketQuery, setTicketQuery] = useState('');
 
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -140,13 +172,41 @@ export const AdminPanel: React.FC<Props> = ({ onNavigateTab }) => {
     setTimeout(() => setNotice(null), 3000);
   };
 
-  const filteredUsers = users.filter(
+  const allUsers = [
+    ...users,
+    ...registeredUsers.map((r, i) => ({
+      id: `reg-${i}-${r.email.replace(/[^a-z0-9]/gi, '').toLowerCase()}`,
+      name: r.name,
+      email: r.email,
+      country: r.country,
+      kycTier: 'Tier 1',
+      balance: 0,
+      status: 'Active',
+      registered: true,
+      dob: r.dob,
+      phone: r.phone,
+    })),
+  ];
+  const filteredUsers = allUsers.filter(
     (u) => u.name.toLowerCase().includes(userQuery.toLowerCase()) || u.email.toLowerCase().includes(userQuery.toLowerCase()) || u.country.toLowerCase().includes(userQuery.toLowerCase())
   );
   const filteredTxs = txs.filter((t) => txFilter === 'All' || t.status === txFilter);
   const filteredTickets = tickets.filter(
     (t) => t.subject.toLowerCase().includes(ticketQuery.toLowerCase()) || t.user.toLowerCase().includes(ticketQuery.toLowerCase())
   );
+  const filteredDeposits = deposits.filter((d) => depositFilter === 'All' || d.status === depositFilter);
+  const totalDepositedUsd = deposits.filter((d) => d.status === 'Completed').reduce((sum, d) => sum + d.amount, 0);
+  const pendingDepositCount = deposits.filter((d) => d.status === 'Pending').length;
+
+  const referredRegistrations = registeredUsers.filter((ru) => ru.referrer);
+  const referralOverview = referrals.map((r) => {
+    const matched = referredRegistrations.filter((ru) => ru.referrer.toUpperCase() === r.refCode.toUpperCase());
+    const deposited = matched.filter((ru) => deposits.some((d) => d.email.toLowerCase() === ru.email.toLowerCase()));
+    const bonusCount = matched.length + deposited.length;
+    const earnedXena = deposited.length * 100;
+    return { ...r, newCount: matched.length, depositedCount: deposited.length, earnedXena };
+  });
+  const referralBonusTotal = referralOverview.reduce((s, r) => s + r.earnedXena, 0);
 
   const kpi = {
     totalUsers: '48,203',
@@ -161,6 +221,8 @@ export const AdminPanel: React.FC<Props> = ({ onNavigateTab }) => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'users', label: 'Users', icon: UsersIcon },
     { id: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
+    { id: 'deposits', label: 'Deposits', icon: Banknote },
+    { id: 'referrals', label: 'Referrals', icon: UserPlus },
     { id: 'p2p', label: 'P2P Marketplace', icon: Handshake },
     { id: 'investments', label: 'Investments & Staking', icon: PiggyBank },
     { id: 'announcements', label: 'Announcements', icon: Newspaper },
@@ -283,6 +345,29 @@ export const AdminPanel: React.FC<Props> = ({ onNavigateTab }) => {
                 <ChevronRight className="w-4 h-4 text-[#6B7280]" />
               </button>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button onClick={() => setSection('deposits')} className="flex items-center justify-between bg-white border border-[#EDE9FE] rounded-2xl p-4 hover:border-purple-200 transition-colors cursor-pointer shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><Banknote className="w-4 h-4" /></span>
+                    <div className="text-left">
+                      <span className="block text-xs font-bold text-[#171717]">${totalDepositedUsd.toLocaleString()} deposited</span>
+                      <span className="block text-[10px] text-[#6B7280]">View the full deposit ledger — all money deposited</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#6B7280]" />
+                </button>
+                <button onClick={() => setSection('referrals')} className="flex items-center justify-between bg-white border border-[#EDE9FE] rounded-2xl p-4 hover:border-purple-200 transition-colors cursor-pointer shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="w-9 h-9 rounded-xl bg-purple-50 text-[#7C3AED] flex items-center justify-center"><UserPlus className="w-4 h-4" /></span>
+                    <div className="text-left">
+                      <span className="block text-xs font-bold text-[#171717]">{referralBonusTotal} XENA referral bonuses</span>
+                      <span className="block text-[10px] text-[#6B7280]">View referrals — 100 XENA auto-approved per verified deposit</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#6B7280]" />
+                </button>
+              </div>
+
               <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
                 <div className="flex items-center justify-between pb-3 border-b border-[#EDE9FE]">
                   <h3 className="text-sm font-bold text-[#171717]">Recent Admin Activity</h3>
@@ -308,6 +393,7 @@ export const AdminPanel: React.FC<Props> = ({ onNavigateTab }) => {
             <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#EDE9FE]">
                 <h3 className="text-sm font-bold text-[#171717]">User Management</h3>
+                {registeredUsers.length > 0 && <span className="text-[10px] font-bold text-[#16A34A] bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">{registeredUsers.length} new registration{registeredUsers.length === 1 ? '' : 's'}</span>}
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 text-[#9CA3AF] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input value={userQuery} onChange={(e) => setUserQuery(e.target.value)} placeholder="Search name, email, country..." className="w-full sm:w-64 pl-9 pr-3 py-2 bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl text-xs font-semibold focus:outline-none focus:border-[#7C3AED] transition-all" />
@@ -328,28 +414,47 @@ export const AdminPanel: React.FC<Props> = ({ onNavigateTab }) => {
                   <tbody className="divide-y divide-[#EDE9FE]">
                     {filteredUsers.map((u) => {
                       const frozen = u.status === 'Frozen';
+                      const banned = u.status === 'Banned';
+                      const pendingKyc = u.status === 'Pending KYC';
                       return (
                         <tr key={u.id} className="hover:bg-[#F8F7FC]">
                           <td className="py-2.5 pr-3">
-                            <span className="block font-bold text-[#171717]">{u.name}</span>
+                            <span className="block font-bold text-[#171717]">{u.name} {u.registered && <span className="ml-1 text-[8px] font-extrabold text-[#16A34A] bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">New</span>}</span>
                             <span className="block text-[10px] text-[#6B7280]">{u.email}</span>
+                            {u.registered && <span className="block text-[10px] text-[#9CA3AF]">{u.phone || ''}</span>}
                           </td>
                           <td className="py-2.5 pr-3 text-[#6B7280]">{u.country}</td>
                           <td className="py-2.5 pr-3"><span className="text-[10px] font-bold text-[#6D28D9] bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">{u.kycTier}</span></td>
                           <td className="py-2.5 pr-3 text-right font-mono font-bold text-[#171717]">{u.balance.toLocaleString()}</td>
                           <td className="py-2.5 pr-3">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${frozen ? 'bg-red-50 text-red-600 border-red-100' : u.status === 'Pending KYC' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-[#16A34A] border-emerald-100'}`}>{u.status}</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${banned ? 'bg-slate-800 text-white border-slate-800' : frozen ? 'bg-red-50 text-red-600 border-red-100' : pendingKyc ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-[#16A34A] border-emerald-100'}`}>{u.status}</span>
                           </td>
                           <td className="py-2.5 text-right whitespace-nowrap">
-                            <button
-                              onClick={() => {
-                                setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, status: frozen ? 'Active' : 'Frozen' } : x));
-                                notify(`${u.name} ${frozen ? 'unfrozen' : 'frozen'}`);
-                              }}
-                              className={`px-2 py-1 rounded-lg text-[10px] font-bold border cursor-pointer ${frozen ? 'bg-emerald-50 text-[#16A34A] border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'}`}
-                            >
-                              {frozen ? 'Unfreeze' : 'Freeze'}
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              {pendingKyc && (
+                                <button
+                                  onClick={() => { setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, status: 'Active', kycTier: x.kycTier === 'Tier 1' ? 'Tier 2' : x.kycTier } : x)); notify(`${u.name} KYC approved`); }}
+                                  className="px-2 py-1 rounded-lg bg-purple-50 text-[#6D28D9] text-[10px] font-bold border border-purple-100 cursor-pointer"><BadgeCheck className="w-3 h-3 inline mr-0.5" />KYC</button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, status: frozen ? 'Active' : 'Frozen' } : x));
+                                  notify(`${u.name} ${frozen ? 'unfrozen' : 'frozen'}`);
+                                }}
+                                className={`px-2 py-1 rounded-lg text-[10px] font-bold border cursor-pointer ${frozen ? 'bg-emerald-50 text-[#16A34A] border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'}`}
+                              >
+                                {frozen ? 'Unfreeze' : 'Freeze'}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, status: banned ? 'Active' : 'Banned' } : x));
+                                  notify(`${u.name} ${banned ? 'unbanned' : 'banned'}`);
+                                }}
+                                className={`px-2 py-1 rounded-lg text-[10px] font-bold border cursor-pointer items-center gap-1 ${banned ? 'bg-emerald-50 text-[#16A34A] border-emerald-100' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
+                              >
+                                <Ban className="w-3 h-3 inline mr-0.5" />{banned ? 'Unban' : 'Ban'}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -407,6 +512,174 @@ export const AdminPanel: React.FC<Props> = ({ onNavigateTab }) => {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* ============ DEPOSITS ============ */}
+          {section === 'deposits' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Total Deposited', value: `$${totalDepositedUsd.toLocaleString()}`, icon: Banknote, tone: 'bg-emerald-50 text-emerald-600' },
+                  { label: 'Deposits (30d)', value: deposits.length, icon: ArrowDownRight, tone: 'bg-sky-50 text-sky-600' },
+                  { label: 'Awaiting Approval', value: pendingDepositCount, icon: Timer, tone: 'bg-amber-50 text-amber-600' },
+                  { label: 'Avg Deposit', value: `$${deposits.length ? Math.round(totalDepositedUsd / deposits.length).toLocaleString() : 0}`, icon: TrendingUp, tone: 'bg-purple-50 text-[#7C3AED]' },
+                ].map((s) => (
+                  <div key={s.label} className="bg-white border border-[#EDE9FE] rounded-2xl p-3.5 shadow-sm">
+                    <span className={`w-8 h-8 rounded-lg ${s.tone} flex items-center justify-center`}><s.icon className="w-4 h-4" /></span>
+                    <span className="block text-lg font-extrabold text-[#171717] font-mono mt-2">{s.value}</span>
+                    <span className="block text-[10px] text-[#6B7280] font-semibold mt-0.5">{s.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#EDE9FE]">
+                  <h3 className="text-sm font-bold text-[#171717]">Deposit Ledger — All Money Deposited</h3>
+                  <div className="flex bg-[#F8F7FC] p-0.5 rounded-lg border border-[#EDE9FE] text-[10px] font-bold">
+                    {['All', 'Completed', 'Pending'].map((s) => (
+                      <button key={s} onClick={() => setDepositFilter(s)} className={`px-2.5 py-1 rounded-md cursor-pointer transition-all ${depositFilter === s ? 'bg-[#6D28D9] text-white' : 'text-[#6B7280] hover:text-[#171717]'}`}>{s}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full text-left text-xs min-w-[560px]">
+                    <thead>
+                      <tr className="text-[10px] text-[#9CA3AF] uppercase tracking-wide font-bold border-b border-[#EDE9FE]">
+                        <th className="py-2 pr-3">User</th>
+                        <th className="py-2 pr-3">Method</th>
+                        <th className="py-2 pr-3 text-right">Amount (USD)</th>
+                        <th className="py-2 pr-3 text-right">XENA</th>
+                        <th className="py-2 pr-3">Status</th>
+                        <th className="py-2">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EDE9FE]">
+                      {filteredDeposits.map((d) => {
+                        const matchedRef = referralOverview.find((r) => registeredUsers.some((ru) => ru.email.toLowerCase() === d.email.toLowerCase() && ru.referrer.toUpperCase() === r.refCode.toUpperCase()));
+                        return (
+                          <tr key={d.id} className="hover:bg-[#F8F7FC]">
+                            <td className="py-2.5 pr-3">
+                              <span className="block font-bold text-[#171717]">{d.user}</span>
+                              <span className="block text-[10px] text-[#6B7280]">{d.email}</span>
+                            </td>
+                            <td className="py-2.5 pr-3 text-[#6B7280]">{d.method}</td>
+                            <td className="py-2.5 pr-3 text-right font-mono font-bold text-[#171717]">${d.amount.toLocaleString()}</td>
+                            <td className="py-2.5 pr-3 text-right font-mono text-[#6D28D9]">{d.xena.toLocaleString()}</td>
+                            <td className="py-2.5 pr-3"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${d.status === 'Completed' ? 'bg-emerald-50 text-[#16A34A] border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>{d.status}</span></td>
+                            <td className="py-2.5 text-right whitespace-nowrap">
+                              {d.status === 'Pending' ? (
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => {
+                                      setDeposits((prev) => prev.map((x) => x.id === d.id ? { ...x, status: 'Completed' } : x));
+                                      if (matchedRef) {
+                                        setBonusLog((prev) => [{ id: `b-${Date.now()}`, code: matchedRef.refCode, name: matchedRef.name, xena: 100, time: 'Just now' }, ...prev]);
+                                        notify(`${d.user} deposited — +100 XENA bonus auto-approved to ${matchedRef.name}'s referral`);
+                                      } else {
+                                        notify('Deposit approved');
+                                      }
+                                    }}
+                                    className="px-2 py-1 rounded-lg bg-emerald-50 text-[#16A34A] text-[10px] font-bold border border-emerald-100 cursor-pointer">Approve</button>
+                                </div>
+                              ) : (
+                                <span className="text-[9px] text-[#9CA3AF]">{d.time}</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {bonusLog.length > 0 && (
+                <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
+                  <h3 className="text-sm font-bold text-[#171717] pb-3 border-b border-[#EDE9FE] flex items-center gap-2"><BadgeCheck className="w-4 h-4 text-[#16A34A]" /> Auto-Approved Referral Bonuses</h3>
+                  <div className="divide-y divide-[#EDE9FE]">
+                    {bonusLog.map((b) => (
+                      <div key={b.id} className="py-2.5 flex items-center justify-between gap-3 text-xs">
+                        <div className="min-w-0">
+                          <span className="font-bold text-[#171717] block">+{b.xena} XENA → {b.name}</span>
+                          <span className="text-[10px] text-[#6B7280] block">Referral code {b.code}</span>
+                        </div>
+                        <span className="text-[9px] font-bold text-[#16A34A] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Approved · {b.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ============ REFERRALS ============ */}
+          {section === 'referrals' && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-[#1E1B4B] via-[#7C3AED] to-[#DB2777] rounded-2xl p-4 text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-extrabold flex items-center gap-2"><Gift className="w-4 h-4" /> Referral Program</h3>
+                    <p className="text-[10px] text-purple-100 mt-0.5">Each referred person who deposits = <b className="text-amber-300">+100 XENA bonus</b>, auto-approved instantly.</p>
+                  </div>
+                  <span className="text-[10px] font-bold bg-white/15 border border-white/25 px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5"><Gem className="w-3.5 h-3.5" /> Earned this month: <span className="font-mono font-extrabold">{referralBonusTotal} XENA</span></span>
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
+                <h3 className="text-sm font-bold text-[#171717] pb-3 border-b border-[#EDE9FE]">Referral Activity</h3>
+                <div className="overflow-x-auto mt-3">
+                  <table className="w-full text-left text-xs min-w-[560px]">
+                    <thead>
+                      <tr className="text-[10px] text-[#9CA3AF] uppercase tracking-wide font-bold border-b border-[#EDE9FE]">
+                        <th className="py-2 pr-3">Referrer</th>
+                        <th className="py-2 pr-3">Ref Code</th>
+                        <th className="py-2 pr-3 text-right">Referred</th>
+                        <th className="py-2 pr-3 text-right">Deposited</th>
+                        <th className="py-2 pr-3 text-right">Bonus (XENA)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EDE9FE]">
+                      {referralOverview.map((r) => (
+                        <tr key={r.id} className="hover:bg-[#F8F7FC]">
+                          <td className="py-2.5 pr-3 font-bold text-[#171717]">{r.name}</td>
+                          <td className="py-2.5 pr-3"><span className="font-mono text-[10px] font-bold text-[#6D28D9] bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">{r.refCode}</span></td>
+                          <td className="py-2.5 pr-3 text-right"><span className="text-[10px] font-bold bg-[#F8F7FC] px-2 py-0.5 rounded-full border border-[#EDE9FE]">{r.count + r.newCount}</span></td>
+                          <td className="py-2.5 pr-3 text-right font-bold text-[#171717]">{r.depositedCount}</td>
+                          <td className="py-2.5 pr-3 text-right"><span className="text-[10px] font-bold text-[#16A34A] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">+{r.earnedXena}</span></td>
+                        </tr>
+                      ))}
+                      {referredRegistrations.length === 0 && (
+                        <tr><td colSpan={5} className="py-6 text-center text-[#9CA3AF] text-xs">No active referrals yet. Share referral codes to start earning 100 XENA per verified deposit.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {referredRegistrations.length > 0 && (
+                <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
+                  <h3 className="text-sm font-bold text-[#171717] pb-3 border-b border-[#EDE9FE] flex items-center gap-2"><UserPlus className="w-4 h-4 text-[#7C3AED]" /> People Referred ({referredRegistrations.length})</h3>
+                  <div className="divide-y divide-[#EDE9FE]">
+                    {referredRegistrations.map((ru, i) => {
+                      const deposited = deposits.some((d) => d.email.toLowerCase() === ru.email.toLowerCase());
+                      return (
+                        <div key={i} className="py-2.5 flex items-center justify-between gap-3 text-xs">
+                          <div className="min-w-0">
+                            <span className="font-bold text-[#171717] block">{ru.name}</span>
+                            <span className="text-[10px] text-[#6B7280] block">{ru.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[9px] font-bold text-[#6D28D9] bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100 font-mono">{ru.referrer}</span>
+                            {deposited ? <span className="text-[9px] font-bold text-[#16A34A] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 flex items-center gap-1"><Check className="w-3 h-3" /> Deposited · +100 XENA</span> : <span className="text-[9px] text-[#9CA3AF]">No deposit yet</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

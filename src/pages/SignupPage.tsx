@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Zap, Sparkles, Check,
 interface SignupPageProps {
   onNavigateTab: (tab: string) => void;
   onSignupSuccess?: () => void;
+  onRegister?: (data: { name: string; email: string; country: string; phone: string; dob: string; referrer: string }) => void;
 }
 
 const COUNTRIES = [
@@ -22,7 +23,7 @@ const PHONE_PREFIXES: Record<string, string> = {
   'India': '+91', 'Pakistan': '+92', 'Bangladesh': '+880', 'Sri Lanka': '+94', 'Nepal': '+977', 'Indonesia': '+62', 'Malaysia': '+60', 'Singapore': '+65', 'Thailand': '+66', 'Vietnam': '+84', 'Philippines': '+63', 'China': '+86', 'Japan': '+81', 'South Korea': '+82', 'Hong Kong': '+852', 'Taiwan': '+886', 'Australia': '+61', 'New Zealand': '+64', 'Kazakhstan': '+7', 'Uzbekistan': '+998',
 };
 
-export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupSuccess }) => {
+export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupSuccess, onRegister }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -81,6 +82,9 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupS
     setTimeout(() => {
       setLoading(false);
       setDone(true);
+      if (onRegister) {
+        onRegister({ name, email, country, phone, dob, referrer: referral.trim() });
+      }
     }, 900);
   };
 

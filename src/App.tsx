@@ -59,6 +59,7 @@ export default function App() {
 
   // Active View / Page Routing
   const [activeTab, setActiveTab] = useState<string>('home');
+  const [registeredUsers, setRegisteredUsers] = useState<{ name: string; email: string; country: string; phone: string; dob: string; referrer: string }[]>([]);
 
   // Modal States
   const [depositWithdrawOpen, setDepositWithdrawOpen] = useState(false);
@@ -467,10 +468,16 @@ export default function App() {
         );
 
       case 'signup':
-        return <SignupPage onNavigateTab={handleNavSelect} onSignupSuccess={() => handleNavSelect('home')} />;
+        return (
+          <SignupPage
+            onNavigateTab={handleNavSelect}
+            onSignupSuccess={() => handleNavSelect('home')}
+            onRegister={(data) => setRegisteredUsers((prev) => [...prev, data])}
+          />
+        );
 
       case 'admin':
-        return <AdminPanel onNavigateTab={handleNavSelect} />;
+        return <AdminPanel onNavigateTab={handleNavSelect} registeredUsers={registeredUsers} />;
 
       default:
         return (
@@ -484,7 +491,7 @@ export default function App() {
             onOpenDeposit={handleOpenDeposit}
             onOpenWithdraw={handleOpenWithdraw}
             onQuickAction={handleQuickAction}
-            onNavigate={handleNavSelect}
+            onNavigateTab={handleNavSelect}
             onSelectP2POffer={handleSelectP2POffer}
             onSelectPlan={handleSelectPlan}
             onOpenSecuritySettings={() => handleNavSelect('security')}
@@ -496,6 +503,8 @@ export default function App() {
               setBuySellMode('sell');
               setBuySellOpen(true);
             }}
+            referralCode={`XENA-${user.name.split(' ')[0].toUpperCase()}`}
+            referralCount={registeredUsers.filter((ru) => ru.referrer && ru.referrer.toUpperCase() === `XENA-${user.name.split(' ')[0].toUpperCase()}`).length}
           />
         );
     }
