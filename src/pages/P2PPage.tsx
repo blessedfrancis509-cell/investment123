@@ -122,7 +122,7 @@ export const P2PPage: React.FC<P2PPageProps> = ({ offers, onSelectOffer, onAddOf
     };
     if (onAddOffer) onAddOffer(newOffer);
     setShowPostAdModal(false);
-    setAdSuccessToast(`Your ${adTradeType} trade ad (#${newOffer.id.slice(-5)}) is now live on the marketplace.`);
+    setAdSuccessToast(`Your ${adTradeType} trade ad (#${newOffer.id.slice(-5)}) has been submitted for admin approval. It will go live once approved.`);
     setTimeout(() => setAdSuccessToast(null), 5000);
   };
 

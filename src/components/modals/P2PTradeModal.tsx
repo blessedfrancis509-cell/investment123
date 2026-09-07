@@ -5,7 +5,6 @@ import {
   ShieldCheck,
   Clock,
   ArrowRight,
-  Sparkles,
   Building2,
   CreditCard,
   Smartphone,
@@ -19,14 +18,14 @@ import {
   ChevronRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { P2POffer, Transaction } from '../../types';
+import { P2POffer, P2PTrade } from '../../types';
 
 interface P2PTradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   offer: P2POffer | null;
   initialPaymentMethod?: string;
-  onTradeComplete: (xenaAmount: number, newTx: Transaction) => void;
+  onPaymentSubmitted: (trade: P2PTrade) => void;
 }
 
 export const P2PTradeModal: React.FC<P2PTradeModalProps> = ({
@@ -34,7 +33,7 @@ export const P2PTradeModal: React.FC<P2PTradeModalProps> = ({
   onClose,
   offer,
   initialPaymentMethod,
-  onTradeComplete,
+  onPaymentSubmitted,
 }) => {
   const [fiatAmount, setFiatAmount] = useState<string>('285');
   const [selectedMethod, setSelectedMethod] = useState<string>('');
@@ -196,21 +195,25 @@ export const P2PTradeModal: React.FC<P2PTradeModalProps> = ({
         });
       } catch {}
 
-      const receivedNum = parseFloat(xenaReceived);
-      const newTx: Transaction = {
-        id: `tx-${Date.now().toString().slice(-4)}`,
-        title: `P2P Purchase (${activeMethod})`,
-        type: 'p2p_buy',
-        amount: receivedNum,
-        unit: 'XENA',
-        status: 'Completed',
-        timestamp: 'Just now',
-        counterparty: `${offer.merchantName} (${offer.merchantTier || 'Verified Merchant'})`,
-        paymentMethod: activeMethod,
-        fee: 0.0,
+      const receivedNum = parseFloat(xenaReceived) || 0;
+      const now = Date.now().toString();
+      const newTrade: P2PTrade = {
+        id: `p2p-tx-${now.slice(-6)}`,
+        offerId: offer.id,
+        merchantName: offer.merchantName,
+        type: 'BUY',
+        method: activeMethod,
+        fiatAmount: fiat,
+        currency: offer.currency || 'USD',
+        xenaAmount: receivedNum,
+        pricePerXena: offer.pricePerXena,
+        buyerEmail: '',
+        status: 'awaiting_validation',
+        reference: `XN-84920-P2P`,
+        time: 'Just now',
       };
 
-      onTradeComplete(receivedNum, newTx);
+      onPaymentSubmitted(newTrade);
       setTimeout(() => {
         setStep('create');
         onClose();
@@ -548,21 +551,28 @@ export const P2PTradeModal: React.FC<P2PTradeModalProps> = ({
             </div>
           )}
 
-          {/* STEP 3: RELEASED SUCCESS */}
+          {/* STEP 3: SUBMITTED — AWAITING ADMIN VALIDATION */}
           {step === 'done' && (
             <div className="py-8 text-center space-y-4 animate-fade-in">
-              <div className="w-16 h-16 mx-auto rounded-full bg-emerald-50 text-[#16A34A] flex items-center justify-center border border-emerald-200 shadow-sm">
-                <Sparkles className="w-8 h-8" />
+              <div className="w-16 h-16 mx-auto rounded-full bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200 shadow-sm">
+                <Clock className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-xl font-black text-[#171717]">P2P Crypto Released!</h4>
+                <h4 className="text-xl font-black text-[#171717]">Payment Submitted for Review</h4>
                 <p className="text-xs text-[#6B7280] max-w-sm mx-auto">
-                  <strong className="text-[#6D28D9] font-bold">+{xenaReceived} XENA</strong> has been credited to your available balance via Escrow.
+                  Admin will now verify your <strong className="text-[#6D28D9] font-bold">{activeMethod}</strong> settlement. Your <strong className="text-[#6D28D9] font-bold">+{xenaReceived} XENA</strong> will be released to your balance once the payment is validated.
                 </p>
               </div>
 
-              <div className="p-3 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE] max-w-xs mx-auto text-xs text-[#6B7280]">
-                <span>Settled via {activeMethod} · Zero Fee</span>
+              <div className="p-3 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE] max-w-xs mx-auto text-xs text-[#6B7280] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span>Status</span>
+                  <span className="text-amber-600 font-bold">Awaiting admin validation</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Reference</span>
+                  <span className="font-mono font-bold text-[#171717]">XN-84920-P2P</span>
+                </div>
               </div>
             </div>
           )}

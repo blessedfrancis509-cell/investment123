@@ -16,6 +16,7 @@ import {
   Transaction,
   InvestmentPlan,
   P2POffer,
+  P2PTrade,
   NotificationItem,
   Account,
   RegisteredUserRecord,
@@ -31,7 +32,7 @@ import {
   SEED_DEPOSITS,
   SEED_REFERRALS,
 } from './pages/AdminPanel';
-import { getState, saveState } from './lib/api';
+import { getState, saveState, registerAccount, loginAccount, saveAccount, changeAccountPassword, getAuthToken, adjustUserBalance, submitP2POffer, approveP2POffer, rejectP2POffer, submitP2PPayment, approveP2PPayment, rejectP2PPayment } from './lib/api';
 
 // Layout Components
 import { Header } from './components/Header';
@@ -70,6 +71,7 @@ export default function App() {
   const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
   const [investments, setInvestments] = useState<InvestmentPlan[]>(INITIAL_INVESTMENT_PLANS);
   const [p2pOffers, setP2POffers] = useState<P2POffer[]>(INITIAL_P2P_OFFERS);
+  const [p2pTrades, setP2PTrades] = useState<P2PTrade[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
 
   // Active View / Page Routing
@@ -94,6 +96,12 @@ export default function App() {
   const registeredUsers = useMemo(
     () => accounts.map((a) => ({ name: a.name, email: a.email, country: a.country, phone: a.phone, dob: a.dob, referrer: a.referrer })),
     [accounts]
+  );
+
+  // Only approved listings appear in the public marketplace.
+  const visibleP2POffers = useMemo(
+    () => p2pOffers.filter((o) => o.status !== 'pending' && o.status !== 'rejected'),
+    [p2pOffers]
   );
 
   // Modal States
@@ -154,6 +162,8 @@ export default function App() {
           if (state.bonusLog) setBonusLog(state.bonusLog);
           if (state.settings) setAdminSettings(state.settings);
           if (state.accounts) setAccounts(state.accounts);
+          if (state.p2pOffers) setP2POffers(state.p2pOffers);
+          if (state.p2pTrades) setP2PTrades(state.p2pTrades);
         }
       } catch {
         // offline — keep seed defaults
@@ -162,7 +172,9 @@ export default function App() {
     })();
   }, []);
 
-  // Persist: push the full shared server state whenever any admin/account data changes
+  // Persist: push the full shared admin state whenever it changes.
+  // (Accounts are NOT included — they persist through the authenticated
+  // account-save endpoint so hashes and balances stay server-protected.)
   const persistedSnapshot = useMemo(
     () =>
       JSON.stringify({
@@ -178,9 +190,8 @@ export default function App() {
         announcements,
         audit,
         settings: adminSettings,
-        accounts,
       }),
-    [users, txs, deposits, referrals, bonusLog, merchants, disputes, tickets, promos, announcements, audit, adminSettings, accounts]
+    [users, txs, deposits, referrals, bonusLog, merchants, disputes, tickets, promos, announcements, audit, adminSettings]
   );
 
   useEffect(() => {
@@ -191,27 +202,26 @@ export default function App() {
     return () => clearTimeout(t);
   }, [persistedSnapshot, booted]);
 
-  // Sync: keep the logged-in account's live session data persisted
+  // Sync: keep the signed-in account's live session data persisted via the
+  // authenticated account-save endpoint (only when a real account token exists).
   useEffect(() => {
-    setAccounts((prev) =>
-      prev.map((a) =>
-        a.email.toLowerCase() === user.email.toLowerCase()
-          ? {
-              ...a,
-              name: user.name,
-              kycTier: user.kycTier,
-              twoFactorEnabled: user.twoFactorEnabled,
-              pinSet: user.pinSet,
-              verifiedAccountsCount: user.verifiedAccountsCount,
-              balances,
-              transactions,
-              investments,
-              notifications,
-              redeemedBonusCodes,
-            }
-          : a
-      )
-    );
+    if (!getAuthToken()) return;
+    const t = setTimeout(() => {
+      saveAccount({
+        name: user.name,
+        email: user.email.toLowerCase(),
+        kycTier: user.kycTier,
+        twoFactorEnabled: user.twoFactorEnabled,
+        pinSet: user.pinSet,
+        verifiedAccountsCount: user.verifiedAccountsCount,
+        balances,
+        transactions,
+        investments,
+        notifications,
+        redeemedBonusCodes,
+      }).catch(() => {});
+    }, 500);
+    return () => clearTimeout(t);
   }, [user, balances, transactions, investments, notifications, redeemedBonusCodes]);
 
   // Handlers for state updates
@@ -240,17 +250,156 @@ export default function App() {
     setTransactions((prev) => [newTx, ...prev]);
   };
 
-  const handleP2PTradeComplete = (xenaAmount: number, newTx: Transaction) => {
-    setBalances((prev) => ({
+  const handleP2PPaymentSubmitted = (trade: P2PTrade) => {
+    const t = { ...trade, buyerEmail: user.email };
+    setP2PTrades((prev) => [t, ...prev]);
+    submitP2PPayment(t as unknown as Record<string, unknown>).catch(() => {});
+    setNotifications((prev) => [
+      {
+        id: `notif-p2p-${Date.now()}`,
+        title: 'P2P Payment Submitted for Review',
+        message: `Admin is validating your ${t.method} payment. Once approved, ${t.xenaAmount} XENA will be released to your balance.`,
+        timestamp: 'Just now',
+        read: false,
+        type: 'transaction',
+      },
       ...prev,
-      availableXena: prev.availableXena + xenaAmount,
-      totalBalance: prev.totalBalance + xenaAmount,
-    }));
-    setTransactions((prev) => [newTx, ...prev]);
+    ]);
   };
 
   const handleAddP2POffer = (newOffer: P2POffer) => {
-    setP2POffers((prev) => [newOffer, ...prev]);
+    const pendingOffer: P2POffer = {
+      ...newOffer,
+      status: 'pending',
+      listedBy: user.email,
+    };
+    setP2POffers((prev) => [pendingOffer, ...prev]);
+    submitP2POffer(pendingOffer as unknown as Record<string, unknown>).catch(() => {});
+    setNotifications((prev) => [
+      {
+        id: `notif-ad-${Date.now()}`,
+        title: 'P2P Ad Submitted for Approval',
+        message: `Your ${pendingOffer.type || 'BUY'} ad (#${pendingOffer.id.slice(-5)}) is awaiting admin approval before it goes live.`,
+        timestamp: 'Just now',
+        read: false,
+        type: 'system',
+      },
+      ...prev,
+    ]);
+  };
+
+  const handleApproveP2POffer = async (offerId: string) => {
+    setP2POffers((prev) => prev.map((o) => (o.id === offerId ? { ...o, status: 'approved' } : o)));
+    await approveP2POffer(offerId).catch(() => {});
+  };
+
+  const handleRejectP2POffer = async (offerId: string) => {
+    setP2POffers((prev) => prev.map((o) => (o.id === offerId ? { ...o, status: 'rejected' } : o)));
+    await rejectP2POffer(offerId).catch(() => {});
+  };
+
+  const handleApproveP2PPayment = async (tradeId: string) => {
+    const trade = p2pTrades.find((t) => t.id === tradeId);
+    if (!trade) return;
+    setP2PTrades((prev) => prev.map((t) => (t.id === tradeId ? { ...t, status: 'approved' } : t)));
+    const amount = trade.xenaAmount;
+    const newTx: Transaction = {
+      id: `tx-p2p-${Date.now().toString().slice(-6)}`,
+      title: `P2P Purchase (${trade.method})`,
+      type: 'p2p_buy',
+      amount,
+      unit: 'XENA',
+      status: 'Completed',
+      timestamp: 'Just now',
+      counterparty: `${trade.merchantName}`,
+      paymentMethod: trade.method,
+      fee: 0,
+    };
+    setAccounts((prev) =>
+      prev.map((a) =>
+        a.email.toLowerCase() === trade.buyerEmail.toLowerCase()
+          ? {
+              ...a,
+              balances: {
+                ...a.balances,
+                availableXena: (a.balances?.availableXena || 0) + amount,
+                totalBalance: (a.balances?.totalBalance || 0) + amount,
+              },
+              transactions: [newTx, ...(a.transactions || [])],
+              notifications: [
+                {
+                  id: `notif-p2p-${Date.now()}`,
+                  title: 'P2P Payment Approved',
+                  message: `Admin validated your ${trade.method} payment. ${amount} XENA has been released to your balance.`,
+                  timestamp: 'Just now',
+                  read: false,
+                  type: 'transaction',
+                },
+                ...(a.notifications || []),
+              ],
+            }
+          : a
+      )
+    );
+    if (user.email.toLowerCase() === trade.buyerEmail.toLowerCase()) {
+      setBalances((prev) => ({
+        ...prev,
+        availableXena: prev.availableXena + amount,
+        totalBalance: prev.totalBalance + amount,
+      }));
+      setTransactions((prev) => [newTx, ...prev]);
+      setNotifications((prev) => [
+        {
+          id: `notif-p2p-${Date.now()}`,
+          title: 'P2P Payment Approved',
+          message: `Admin validated your ${trade.method} payment. ${amount} XENA has been released to your balance.`,
+          timestamp: 'Just now',
+          read: false,
+          type: 'transaction',
+        },
+        ...prev,
+      ]);
+    }
+    await approveP2PPayment(tradeId).catch(() => {});
+    setNotifications((prev) => [
+      {
+        id: `notif-pa-${Date.now()}`,
+        title: 'P2P Payment Validated',
+        message: `Approved ${amount} XENA release for ${trade.buyerEmail} (${trade.method}).`,
+        timestamp: 'Just now',
+        read: false,
+        type: 'transaction',
+      },
+      ...prev,
+    ]);
+  };
+
+  const handleRejectP2PPayment = async (tradeId: string) => {
+    const trade = p2pTrades.find((t) => t.id === tradeId);
+    if (!trade) return;
+    setP2PTrades((prev) => prev.map((t) => (t.id === tradeId ? { ...t, status: 'rejected' } : t)));
+    await rejectP2PPayment(tradeId).catch(() => {});
+  };
+
+  const handleAdjustUserBalance = async (targetEmail: string, amount: number, memo?: string): Promise<{ ok: boolean; error?: string }> => {
+    const res = await adjustUserBalance(targetEmail, amount, memo);
+    if (!res.ok) return { ok: false, error: res.error };
+    const e = targetEmail.trim().toLowerCase();
+    setAccounts((prev) =>
+      prev.map((a) =>
+        a.email.toLowerCase() === e
+          ? {
+              ...a,
+              balances: {
+                ...a.balances,
+                availableXena: Math.max(0, (a.balances?.availableXena || 0) + amount),
+                totalBalance: Math.max(0, (a.balances?.totalBalance || 0) + amount),
+              },
+            }
+          : a
+      )
+    );
+    return { ok: true };
   };
 
   const handleStakeNewPlan = (plan: InvestmentPlan): boolean => {
@@ -398,6 +547,10 @@ export default function App() {
     setUser((prev) => ({ ...prev, ...profile }));
   };
 
+  const handleChangePassword = async (currentPassword: string, newPassword: string): Promise<{ ok: boolean; error?: string }> => {
+    return changeAccountPassword(currentPassword, newPassword);
+  };
+
   const handleMarkAllNotificationsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
@@ -430,80 +583,44 @@ export default function App() {
     setRedeemedBonusCodes(acc.redeemedBonusCodes || []);
   };
 
-  const resetDemoSession = () => {
-    setUser(INITIAL_USER_PROFILE);
-    setBalances(INITIAL_BALANCES);
-    setTransactions(INITIAL_TRANSACTIONS);
-    setInvestments(INITIAL_INVESTMENT_PLANS);
-    setNotifications(INITIAL_NOTIFICATIONS);
-    setRedeemedBonusCodes([]);
-  };
-
-  const makeAccount = (data: RegisteredUserRecord): Account => {
-    const ts = Date.now().toString();
-    return {
-      ...data,
-      id: `acc-${ts.slice(-6)}`,
-      xenaId: `XN-${Math.floor(1000000 + Math.random() * 9000000)}`,
-      xenaCode: `xena-${Math.floor(10000000 + Math.random() * 89999999)}`,
-      kycTier: 'Tier 1 (Pending)',
-      status: 'Active',
-      joined: new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
-      twoFactorEnabled: false,
-      pinSet: false,
-      verifiedAccountsCount: 0,
-      balances: {
-        ...INITIAL_BALANCES,
-        totalXena: 0,
-        totalBalance: 0,
-        change24hAmount: 0,
-        change24hPercent: 0,
-        availableXena: 0,
-        investedXena: 0,
-        averageBuyPrice: 0,
-        stakedXena: 0,
-        lockedInOrders: 0,
-        nairaBalance: 0,
-      },
-      transactions: [],
-      investments: [],
-      notifications: [],
-      redeemedBonusCodes: [],
-    };
-  };
-
   const handleLogin = async (email: string, password: string): Promise<{ ok: boolean; error?: string }> => {
-    const e = email.trim().toLowerCase();
-    if (e === 'admin@xena.fi' && password === 'xena-admin-demo') {
+    const result = await loginAccount(email, password);
+    if (!result.ok) {
+      // Demo guest fallback: alex.morgan@xena.fi is a seeded showcase profile,
+      // not a real account — allow the offline/demo login for preview purposes.
+      if (email.trim().toLowerCase() === 'alex.morgan@xena.fi' && password === 'xena-user-demo') {
+        setUser(INITIAL_USER_PROFILE);
+        setBalances(INITIAL_BALANCES);
+        setTransactions(INITIAL_TRANSACTIONS);
+        setInvestments(INITIAL_INVESTMENT_PLANS);
+        setNotifications(INITIAL_NOTIFICATIONS);
+        setRedeemedBonusCodes([]);
+        handleNavSelect('home');
+        return { ok: true };
+      }
+      return { ok: false, error: result.error };
+    }
+    if (result.role === 'admin') {
       setUser((prev) => ({ ...prev, role: 'admin', name: 'Administrator', email: 'admin@xena.fi', kycTier: 'Staff', xenaId: 'XN-ADMIN-01', xenaCode: 'xena-admin' }));
       handleNavSelect('admin');
       return { ok: true };
     }
-    const acc = accounts.find((a) => a.email.toLowerCase() === e);
-    if (acc) {
-      if (acc.password !== password) {
-        return { ok: false, error: 'Incorrect password. Please try again.' };
-      }
-      applyAccount(acc);
+    if (result.account) {
+      applyAccount(result.account);
       handleNavSelect('home');
       return { ok: true };
     }
-    if (e === 'alex.morgan@xena.fi' && password === 'xena-user-demo') {
-      resetDemoSession();
-      handleNavSelect('home');
-      return { ok: true };
-    }
-    return { ok: false, error: 'No account found with that email. Please create an account first.' };
+    return { ok: false, error: 'Unable to sign in. Please try again.' };
   };
 
   const handleRegister = async (data: RegisteredUserRecord): Promise<{ ok: boolean; error?: string }> => {
-    const e = data.email.trim().toLowerCase();
-    if (accounts.some((a) => a.email.toLowerCase() === e)) {
-      return { ok: false, error: 'An account with this email already exists. Please sign in instead.' };
+    const result = await registerAccount(data);
+    if (!result.ok) {
+      return { ok: false, error: result.error };
     }
-    const newAcc = makeAccount(data);
-    setAccounts((prev) => [newAcc, ...prev]);
-    applyAccount(newAcc);
+    if (result.account) {
+      applyAccount(result.account);
+    }
     return { ok: true };
   };
 
@@ -518,7 +635,7 @@ export default function App() {
             marketStats={marketStats}
             transactions={transactions}
             investments={investments}
-            p2pOffers={p2pOffers}
+            p2pOffers={visibleP2POffers}
             redeemedBonusCodes={redeemedBonusCodes}
             onRedeemBonus={handleRedeemBonus}
             onOpenDeposit={handleOpenDeposit}
@@ -576,7 +693,7 @@ export default function App() {
       case 'p2p':
         return (
           <P2PPage
-            offers={p2pOffers}
+            offers={visibleP2POffers}
             onSelectOffer={handleSelectP2POffer}
             onAddOffer={handleAddP2POffer}
           />
@@ -663,6 +780,7 @@ export default function App() {
             user={user}
             onUpdateSecurity={handleUpdateSecurity}
             onUpdateProfile={handleUpdateProfile}
+            onChangePassword={handleChangePassword}
             onSelectTab={handleNavSelect}
           />
         );
@@ -700,6 +818,14 @@ export default function App() {
             setTxs={setTxs}
             merchants={merchants}
             setMerchants={setMerchants}
+            p2pOffers={p2pOffers}
+            onApproveP2POffer={handleApproveP2POffer}
+            onRejectP2POffer={handleRejectP2POffer}
+            p2pTrades={p2pTrades}
+            onApproveP2PPayment={handleApproveP2PPayment}
+            onRejectP2PPayment={handleRejectP2PPayment}
+            accounts={accounts}
+            onAdjustBalance={handleAdjustUserBalance}
             disputes={disputes}
             setDisputes={setDisputes}
             tickets={tickets}
@@ -729,7 +855,7 @@ export default function App() {
             marketStats={marketStats}
             transactions={transactions}
             investments={investments}
-            p2pOffers={p2pOffers}
+            p2pOffers={visibleP2POffers}
             onOpenDeposit={handleOpenDeposit}
             onOpenWithdraw={handleOpenWithdraw}
             onQuickAction={handleQuickAction}
@@ -812,7 +938,7 @@ export default function App() {
         onClose={() => setP2PModalOpen(false)}
         offer={selectedP2POffer}
         initialPaymentMethod={selectedP2PPaymentMethod}
-        onTradeComplete={handleP2PTradeComplete}
+        onPaymentSubmitted={handleP2PPaymentSubmitted}
       />
 
       <InvestmentDetailModal

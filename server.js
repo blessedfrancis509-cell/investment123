@@ -1,12 +1,105 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
+const ADMIN_EMAIL = 'admin@xena.fi';
+
+// ---------- Password hashing (Node built-in scrypt, no deps) ----------
+// Password records store salt + hash only; plaintext is never persisted.
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return { salt, hash };
+}
+
+function verifyPassword(password, salt, hash) {
+  if (!salt || !hash) return false;
+  const candidate = crypto.scryptSync(password, salt, 64).toString('hex');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(candidate, 'hex'), Buffer.from(hash, 'hex'));
+  } catch {
+    return false;
+  }
+}
+
+// ---------- Token helpers ----------
+function tokenForEmail(email) {
+  return (db.tokens || {})[String(email).toLowerCase()] || null;
+}
+function setToken(email) {
+  const token = crypto.randomBytes(32).toString('hex');
+  db.tokens = db.tokens || {};
+  db.tokens[String(email).toLowerCase()] = token;
+  saveDb();
+  return token;
+}
+function emailForToken(token) {
+  if (!token || !db.tokens) return null;
+  for (const email of Object.keys(db.tokens)) {
+    if (db.tokens[email] === token) return email;
+  }
+  return null;
+}
+
+// ---------- Account helpers ----------
+function sanitizeAccount(acc) {
+  if (!acc) return acc;
+  const { password, salt, hash, ...rest } = acc;
+  return rest;
+}
+
+function baseAccount(data) {
+  const ts = Date.now().toString();
+  return {
+    ...data,
+    id: `acc-${ts.slice(-6)}`,
+    xenaId: `XN-${Math.floor(1000000 + Math.random() * 9000000)}`,
+    xenaCode: `xena-${Math.floor(10000000 + Math.random() * 89999999)}`,
+    kycTier: 'Tier 1 (Pending)',
+    status: 'Active',
+    joined: new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
+    twoFactorEnabled: false,
+    pinSet: false,
+    verifiedAccountsCount: 0,
+    settings: {},
+    balances: {
+      totalXena: 0,
+      totalBalance: 0,
+      usdRate: 1,
+      change24hAmount: 0,
+      change24hPercent: 0,
+      availableXena: 0,
+      investedXena: 0,
+      averageBuyPrice: 0,
+      currentPrice: 2.85,
+      stakedXena: 0,
+      lockedInOrders: 0,
+      nairaBalance: 0,
+    },
+    transactions: [],
+    investments: [],
+    notifications: [],
+    redeemedBonusCodes: [],
+  };
+}
+
+// ---------- Admin check ----------
+function isAdminToken(token) {
+  return emailForToken(token) === ADMIN_EMAIL;
+}
+function requireAdminToken(token) {
+  if (!token || !isAdminToken(token)) return false;
+  return true;
+}
+function requireUserToken(token) {
+  return !!emailForToken(token);
+}
 
 const SEED_STATE = {
   users: [
@@ -76,6 +169,8 @@ const SEED_STATE = {
     { id: 'r6', user: 'Lina Kowalski', refCode: 'LINA-X', count: 9, earned: 135 },
   ],
   bonusLog: [],
+  p2pOffers: [],
+  p2pTrades: [],
   announcements: [
     {
       id: 'ann-1',
@@ -118,6 +213,7 @@ const SEED_STATE = {
   ],
   settings: { maintenanceMode: false, p2pZeroFee: true, withdrawApproval: true },
   accounts: [],
+  tokens: {},
 };
 
 function loadDb() {
@@ -151,9 +247,13 @@ app.use(express.json({ limit: '2mb' }));
 
 app.get('/api/state', (req, res) => {
   res.set('Cache-Control', 'no-store');
-  res.json(db);
+  const publicAccounts = Array.isArray(db.accounts) ? db.accounts.map(sanitizeAccount) : db.accounts;
+  res.json({ ...db, accounts: publicAccounts });
 });
 
+// Admin/global data mutations. Accounts are NEVER writable here — they only
+// change through the authenticated account/login/register endpoints so that
+// hashes and balances stay safe and per-user.
 app.post('/api/state', (req, res) => {
   const body = req.body;
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
@@ -161,8 +261,321 @@ app.post('/api/state', (req, res) => {
     return;
   }
   for (const key of Object.keys(body)) {
+    if (key === 'accounts' || key === 'tokens' || key === 'p2pOffers' || key === 'p2pTrades') continue;
     db[key] = body[key];
   }
+  saveDb();
+  res.json({ ok: true });
+});
+
+// ---------- Authentication----------- 
+app.post('/api/register', (req, res) => {
+  const { name, email, password, country, phone, dob, referrer } = req.body || {};
+  const e = String(email || '').trim().toLowerCase();
+  if (!name || !e || !password) {
+    res.status(400).json({ ok: false, error: 'Missing required fields.' });
+    return;
+  }
+  if (String(password).length < 8) {
+    res.status(400).json({ ok: false, error: 'Password must be at least 8 characters long.' });
+    return;
+  }
+  const existing = (db.accounts || []).find((a) => a.email === e);
+  if (existing) {
+    res.status(400).json({ ok: false, error: 'An account with this email already exists.' });
+    return;
+  }
+  const { salt, hash } = hashPassword(String(password));
+  const acc = baseAccount({ name, email: e, password: undefined, country, phone, dob, referrer });
+  acc.salt = salt;
+  acc.hash = hash;
+  delete acc.password;
+  db.accounts = [acc, ...(db.accounts || [])];
+  const token = setToken(e);
+  saveDb();
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true, account: sanitizeAccount(acc), token });
+});
+
+app.post('/api/login', (req, res) => {
+  const { email, password } = req.body || {};
+  const e = String(email || '').trim().toLowerCase();
+  if (!e || !password) {
+    res.status(400).json({ ok: false, error: 'Missing email or password.' });
+    return;
+  }
+  if (e === 'admin@xena.fi' && String(password) === 'xena-admin-demo') {
+    const token = setToken(e);
+    saveDb();
+    res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, role: 'admin', token });
+    return;
+  }
+  const acc = (db.accounts || []).find((a) => a.email === e);
+  if (!acc) {
+    res.status(400).json({ ok: false, error: 'No account found with that email.' });
+    return;
+  }
+  if (!verifyPassword(String(password), acc.salt, acc.hash)) {
+    res.status(400).json({ ok: false, error: 'Incorrect password. Please try again.' });
+    return;
+  }
+  const token = tokenForEmail(e) || setToken(e);
+  saveDb();
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true, role: 'user', account: sanitizeAccount(acc), token });
+});
+
+// Persist the signed-in account's mutable session data (bal/transactions/...).
+app.post('/api/account/save', (req, res) => {
+  const { token, updates } = req.body || {};
+  const email = emailForToken(token);
+  if (!email) {
+    res.status(401).json({ ok: false, error: 'Session invalid. Please sign in again.' });
+    return;
+  }
+  const idx = (db.accounts || []).findIndex((a) => a.email === email);
+  if (idx === -1) {
+    res.status(404).json({ ok: false, error: 'Account not found.' });
+    return;
+  }
+  db.accounts[idx] = { ...db.accounts[idx], ...(updates || {}) };
+  saveDb();
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true });
+});
+
+// Change password for the signed-in account (re-hashed server-side).
+app.post('/api/account/password', (req, res) => {
+  const { token, currentPassword, newPassword } = req.body || {};
+  const email = emailForToken(token);
+  if (!email) {
+    res.status(401).json({ ok: false, error: 'Session invalid. Please sign in again.' });
+    return;
+  }
+  const acc = (db.accounts || []).find((a) => a.email === email);
+  if (!acc) {
+    res.status(404).json({ ok: false, error: 'Account not found.' });
+    return;
+  }
+  if (!verifyPassword(String(currentPassword || ''), acc.salt, acc.hash)) {
+    res.status(400).json({ ok: false, error: 'Current password is incorrect.' });
+    return;
+  }
+  if (!newPassword || String(newPassword).length < 8) {
+    res.status(400).json({ ok: false, error: 'New password must be at least 8 characters long.' });
+    return;
+  }
+  const { salt, hash } = hashPassword(String(newPassword));
+  acc.salt = salt;
+  acc.hash = hash;
+  saveDb();
+  res.json({ ok: true });
+});
+
+// ---------- Admin: Adjust User Balance ----------
+app.post('/api/admin/adjust-balance', (req, res) => {
+  const { token, targetEmail, amount, memo } = req.body || {};
+  if (!requireAdminToken(token)) {
+    res.status(401).json({ ok: false, error: 'Admin access required.' });
+    return;
+  }
+  const e = String(targetEmail || '').trim().toLowerCase();
+  const adj = Number(amount) || 0;
+  if (!e || !adj) {
+    res.status(400).json({ ok: false, error: 'Missing target email or amount.' });
+    return;
+  }
+  const acc = (db.accounts || []).find((a) => a.email === e);
+  if (!acc) {
+    res.status(404).json({ ok: false, error: 'No account found with that email.' });
+    return;
+  }
+  acc.balances = acc.balances || {};
+  acc.balances.availableXena = Math.max(0, (acc.balances.availableXena || 0) + adj);
+  acc.balances.totalBalance = Math.max(0, (acc.balances.totalBalance || 0) + adj);
+  acc.transactions = acc.transactions || [];
+  acc.transactions.unshift({
+    id: `tx-admin-${Date.now()}-${Math.floor(Math.random() * 999)}`,
+    title: adj >= 0 ? `Admin Credit — ${memo || 'Balance adjustment'}` : `Admin Debit — ${memo || 'Balance adjustment'}`,
+    type: adj >= 0 ? 'deposit' : 'withdrawal',
+    amount: Math.abs(adj),
+    unit: 'XENA',
+    status: 'Completed',
+    timestamp: new Date().toLocaleString(),
+    counterparty: 'XENA Admin',
+    paymentMethod: 'Admin Adjustment',
+    fee: 0,
+  });
+  acc.notifications = acc.notifications || [];
+  acc.notifications.unshift({
+    id: `notif-admin-${Date.now()}`,
+    title: adj >= 0 ? 'Balance Credited by Admin' : 'Balance Debited by Admin',
+    message: adj >= 0
+      ? `Admin added ${Math.abs(adj)} XENA to your balance. ${memo ? `Reason: ${memo}` : ''}`
+      : `Admin removed ${Math.abs(adj)} XENA from your balance. ${memo ? `Reason: ${memo}` : ''}`,
+    timestamp: 'Just now',
+    read: false,
+    type: 'transaction',
+  });
+  saveDb();
+  res.json({ ok: true, newBalance: acc.balances.availableXena });
+});
+
+// ---------- P2P Listings & Payment Validation (admin approval required) ----------
+app.post('/api/p2p/offer', (req, res) => {
+  const { token, offer } = req.body || {};
+  const email = emailForToken(token);
+  if (!requireUserToken(token)) {
+    res.status(401).json({ ok: false, error: 'You must be signed in to post an ad.' });
+    return;
+  }
+  const newOffer = {
+    id: offer.id || `p2p-ad-${Date.now()}`,
+    merchantName: offer.merchantName || email,
+    merchantTier: offer.merchantTier || 'Verified Trader',
+    completionRate: offer.completionRate ?? 100,
+    completedOrders: offer.completedOrders ?? 0,
+    ordersCount: offer.ordersCount ?? 0,
+    type: offer.type,
+    pricePerXena: Number(offer.pricePerXena) || 2.85,
+    currency: offer.currency || 'USD',
+    minLimit: Number(offer.minLimit) || 50,
+    maxLimit: Number(offer.maxLimit) || 2500,
+    availableXena: Number(offer.availableXena) || 1000,
+    paymentMethods: offer.paymentMethods || ['Bank Transfer'],
+    paymentMethod: offer.paymentMethod || (offer.paymentMethods || []).join(', '),
+    responseTimeMinutes: offer.responseTimeMinutes ?? 2,
+    isOnline: true,
+    status: 'pending',
+    listedBy: email,
+    listedAt: Date.now(),
+  };
+  db.p2pOffers = [newOffer, ...(db.p2pOffers || [])];
+  saveDb();
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true, offer: newOffer });
+});
+
+app.post('/api/p2p/offer/approve', (req, res) => {
+  const { token, offerId } = req.body || {};
+  if (!requireAdminToken(token)) {
+    res.status(401).json({ ok: false, error: 'Admin access required.' });
+    return;
+  }
+  const offer = (db.p2pOffers || []).find((o) => o.id === offerId);
+  if (!offer) {
+    res.status(404).json({ ok: false, error: 'Offer not found.' });
+    return;
+  }
+  offer.status = 'approved';
+  saveDb();
+  res.json({ ok: true });
+});
+
+app.post('/api/p2p/offer/reject', (req, res) => {
+  const { token, offerId } = req.body || {};
+  if (!requireAdminToken(token)) {
+    res.status(401).json({ ok: false, error: 'Admin access required.' });
+    return;
+  }
+  const offer = (db.p2pOffers || []).find((o) => o.id === offerId);
+  if (!offer) {
+    res.status(404).json({ ok: false, error: 'Offer not found.' });
+    return;
+  }
+  offer.status = 'rejected';
+  saveDb();
+  res.json({ ok: true });
+});
+
+app.post('/api/p2p/payment', (req, res) => {
+  const { token, trade } = req.body || {};
+  const email = emailForToken(token);
+  if (!requireUserToken(token)) {
+    res.status(401).json({ ok: false, error: 'You must be signed in to submit payment.' });
+    return;
+  }
+  const newTrade = {
+    id: trade.id || `p2p-tx-${Date.now()}`,
+    offerId: trade.offerId,
+    merchantName: trade.merchantName,
+    type: trade.type || 'BUY',
+    method: trade.method,
+    fiatAmount: Number(trade.fiatAmount) || 0,
+    currency: trade.currency || 'USD',
+    xenaAmount: Number(trade.xenaAmount) || 0,
+    pricePerXena: Number(trade.pricePerXena) || 2.85,
+    buyerEmail: email,
+    status: 'awaiting_validation',
+    reference: trade.reference || `XN-${Math.floor(10000 + Math.random() * 90000)}-P2P`,
+    time: 'Just now',
+    submittedAt: Date.now(),
+  };
+  db.p2pTrades = [newTrade, ...(db.p2pTrades || [])];
+  saveDb();
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true, trade: newTrade });
+});
+
+app.post('/api/p2p/payment/approve', (req, res) => {
+  const { token, tradeId } = req.body || {};
+  if (!requireAdminToken(token)) {
+    res.status(401).json({ ok: false, error: 'Admin access required.' });
+    return;
+  }
+  const trade = (db.p2pTrades || []).find((t) => t.id === tradeId);
+  if (!trade) {
+    res.status(404).json({ ok: false, error: 'Trade not found.' });
+    return;
+  }
+  trade.status = 'approved';
+  let credited = false;
+  const buyer = (db.accounts || []).find((a) => a.email === trade.buyerEmail);
+  if (buyer) {
+    buyer.balances = buyer.balances || {};
+    buyer.balances.availableXena = (buyer.balances.availableXena || 0) + trade.xenaAmount;
+    buyer.balances.totalBalance = (buyer.balances.totalBalance || 0) + trade.xenaAmount;
+    buyer.transactions = buyer.transactions || [];
+    buyer.transactions.unshift({
+      id: `tx-${Date.now()}-${Math.floor(Math.random() * 999)}`,
+      title: `P2P Purchase (${trade.method})`,
+      type: 'p2p_buy',
+      amount: trade.xenaAmount,
+      unit: 'XENA',
+      status: 'Completed',
+      timestamp: new Date().toLocaleString(),
+      counterparty: trade.merchantName,
+      paymentMethod: trade.method,
+      fee: 0,
+    });
+    buyer.notifications = buyer.notifications || [];
+    buyer.notifications.unshift({
+      id: `notif-p2p-${Date.now()}`,
+      title: 'P2P Payment Approved',
+      message: `Admin validated your ${trade.method} payment. ${trade.xenaAmount} XENA has been released to your balance.`,
+      timestamp: 'Just now',
+      read: false,
+      type: 'transaction',
+    });
+    credited = true;
+  }
+  saveDb();
+  res.json({ ok: true, credited });
+});
+
+app.post('/api/p2p/payment/reject', (req, res) => {
+  const { token, tradeId } = req.body || {};
+  if (!requireAdminToken(token)) {
+    res.status(401).json({ ok: false, error: 'Admin access required.' });
+    return;
+  }
+  const trade = (db.p2pTrades || []).find((t) => t.id === tradeId);
+  if (!trade) {
+    res.status(404).json({ ok: false, error: 'Trade not found.' });
+    return;
+  }
+  trade.status = 'rejected';
   saveDb();
   res.json({ ok: true });
 });

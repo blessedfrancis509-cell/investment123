@@ -109,6 +109,24 @@ export interface P2POffer {
   paymentMethod?: string;
   responseTimeMinutes?: number;
   isOnline?: boolean;
+  status?: 'pending' | 'approved' | 'rejected';
+  listedBy?: string;
+}
+
+export interface P2PTrade {
+  id: string;
+  offerId: string;
+  merchantName: string;
+  type: 'BUY' | 'SELL';
+  method: string;
+  fiatAmount: number;
+  currency: string;
+  xenaAmount: number;
+  pricePerXena: number;
+  buyerEmail: string;
+  status: 'awaiting_validation' | 'approved' | 'rejected';
+  reference: string;
+  time: string;
 }
 
 export interface NotificationItem {

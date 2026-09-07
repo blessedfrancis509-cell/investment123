@@ -39,10 +39,11 @@ interface SettingsPageProps {
   user: UserProfile;
   onUpdateSecurity: (settings: { twoFactor: boolean; pinSet: boolean }) => void;
   onUpdateProfile?: (profile: Partial<UserProfile>) => void;
+  onChangePassword?: (currentPassword: string, newPassword: string) => Promise<{ ok: boolean; error?: string }>;
   onSelectTab: (tab: string) => void;
 }
 
-export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecurity, onUpdateProfile, onSelectTab }) => {
+export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecurity, onUpdateProfile, onChangePassword, onSelectTab }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'account' | 'security' | 'affiliate' | 'notifications' | 'appearance' | 'support'>('overview');
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
@@ -99,7 +100,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
     notify('Account information saved successfully.');
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPw.length < 8) {
       notify('New password must be at least 8 characters.');
@@ -108,6 +109,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
     if (newPw !== confirmPw) {
       notify('New passwords do not match.');
       return;
+    }
+    if (onChangePassword) {
+      setSavedNotice('Updating password…');
+      const result = await onChangePassword(currentPw, newPw);
+      if (!result.ok) {
+        notify(result.error || 'Unable to change password.');
+        return;
+      }
     }
     setCurrentPw('');
     setNewPw('');

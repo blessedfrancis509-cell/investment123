@@ -51,6 +51,14 @@ interface Props {
   setTxs: React.Dispatch<React.SetStateAction<any[]>>;
   merchants: any[];
   setMerchants: React.Dispatch<React.SetStateAction<any[]>>;
+  p2pOffers: any[];
+  onApproveP2POffer: (offerId: string) => void | Promise<void>;
+  onRejectP2POffer: (offerId: string) => void | Promise<void>;
+  p2pTrades: any[];
+  onApproveP2PPayment: (tradeId: string) => void | Promise<void>;
+  onRejectP2PPayment: (tradeId: string) => void | Promise<void>;
+  accounts: any[];
+  onAdjustBalance: (targetEmail: string, amount: number, memo?: string) => Promise<{ ok: boolean; error?: string }>;
   disputes: any[];
   setDisputes: React.Dispatch<React.SetStateAction<any[]>>;
   tickets: any[];
@@ -169,6 +177,14 @@ export const AdminPanel: React.FC<Props> = ({
   setTxs,
   merchants,
   setMerchants,
+  p2pOffers,
+  onApproveP2POffer,
+  onRejectP2POffer,
+  p2pTrades,
+  onApproveP2PPayment,
+  onRejectP2PPayment,
+  accounts,
+  onAdjustBalance,
   disputes,
   setDisputes,
   tickets,
@@ -204,6 +220,37 @@ export const AdminPanel: React.FC<Props> = ({
   const [newAnnTitle, setNewAnnTitle] = useState('');
   const [newAnnTag, setNewAnnTag] = useState('');
   const [newAnnSummary, setNewAnnSummary] = useState('');
+  const [adjustEmail, setAdjustEmail] = useState('');
+  const [adjustAmount, setAdjustAmount] = useState('');
+  const [adjustMemo, setAdjustMemo] = useState('');
+  const [adjustBusy, setAdjustBusy] = useState(false);
+  const [adjustError, setAdjustError] = useState<string | null>(null);
+
+  const handleAdjustBalance = async () => {
+    const email = adjustEmail.trim();
+    const amount = parseFloat(adjustAmount);
+    if (!email || !amount) {
+      setAdjustError('Enter a valid email and amount.');
+      return;
+    }
+    setAdjustBusy(true);
+    setAdjustError(null);
+    if (!onAdjustBalance) {
+      notify('Balance adjustment unavailable.');
+      setAdjustBusy(false);
+      return;
+    }
+    const res = await onAdjustBalance(email, amount, adjustMemo || undefined);
+    setAdjustBusy(false);
+    if (!res.ok) {
+      setAdjustError(res.error || 'Unable to adjust balance.');
+      return;
+    }
+    setAdjustEmail('');
+    setAdjustAmount('');
+    setAdjustMemo('');
+    notify(`${amount >= 0 ? 'Added' : 'Removed'} ${Math.abs(amount)} XENA ${amount >= 0 ? 'to' : 'from'} ${email}`);
+  };
 
   const notify = (msg: string) => {
     setNotice(msg);
@@ -211,22 +258,34 @@ export const AdminPanel: React.FC<Props> = ({
   };
 
   const allUsers = [
-    ...users,
-    ...registeredUsers.map((r, i) => ({
-      id: `reg-${i}-${r.email.replace(/[^a-z0-9]/gi, '').toLowerCase()}`,
-      name: r.name,
-      email: r.email,
-      country: r.country,
-      kycTier: 'Tier 1',
-      balance: 0,
-      status: 'Active',
-      registered: true,
-      dob: r.dob,
-      phone: r.phone,
+    ...users.map((u) => ({
+      ...u,
+      uid: u.uid || u.xenaId || (u.id ? `XN-${u.id.replace(/\D/g, '').padStart(6, '0')}` : '-'),
     })),
+    ...registeredUsers.map((r, i) => {
+      const live = accounts.find((a) => a.email.toLowerCase() === r.email.toLowerCase());
+      return {
+        id: `reg-${i}-${r.email.replace(/[^a-z0-9]/gi, '').toLowerCase()}`,
+        name: r.name,
+        email: r.email,
+        country: r.country,
+        kycTier: 'Tier 1',
+        balance: live?.balances?.availableXena || 0,
+        status: 'Active',
+        registered: true,
+        dob: r.dob,
+        phone: r.phone,
+        uid: live?.xenaId || `XN-${String(i).padStart(6, '0')}`,
+        liveAccount: !!live,
+      };
+    }),
   ];
   const filteredUsers = allUsers.filter(
-    (u) => u.name.toLowerCase().includes(userQuery.toLowerCase()) || u.email.toLowerCase().includes(userQuery.toLowerCase()) || u.country.toLowerCase().includes(userQuery.toLowerCase())
+    (u) =>
+      u.name.toLowerCase().includes(userQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(userQuery.toLowerCase()) ||
+      u.country.toLowerCase().includes(userQuery.toLowerCase()) ||
+      (u.uid || '').toLowerCase().includes(userQuery.toLowerCase())
   );
   const filteredTxs = txs.filter((t) => txFilter === 'All' || t.status === txFilter);
   const filteredTickets = tickets.filter(
@@ -428,78 +487,98 @@ export const AdminPanel: React.FC<Props> = ({
 
           {/* ============ USERS ============ */}
           {section === 'users' && (
-            <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#EDE9FE]">
-                <h3 className="text-sm font-bold text-[#171717]">User Management</h3>
-                {registeredUsers.length > 0 && <span className="text-[10px] font-bold text-[#16A34A] bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">{registeredUsers.length} new registration{registeredUsers.length === 1 ? '' : 's'}</span>}
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-[#9CA3AF] absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input value={userQuery} onChange={(e) => setUserQuery(e.target.value)} placeholder="Search name, email, country..." className="w-full sm:w-64 pl-9 pr-3 py-2 bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl text-xs font-semibold focus:outline-none focus:border-[#7C3AED] transition-all" />
+            <div className="space-y-4">
+              <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#EDE9FE]">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm font-bold text-[#171717]">User Management</h3>
+                    {registeredUsers.length > 0 && <span className="text-[10px] font-bold text-[#16A34A] bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">{registeredUsers.length} new registration{registeredUsers.length === 1 ? '' : 's'}</span>}
+                  </div>
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-[#9CA3AF] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input value={userQuery} onChange={(e) => setUserQuery(e.target.value)} placeholder="Search name, email, UID, country..." className="w-full sm:w-72 pl-9 pr-3 py-2 bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl text-xs font-semibold focus:outline-none focus:border-[#7C3AED] transition-all" />
+                  </div>
+                </div>
+                <div className="overflow-x-auto mt-3">
+                  <table className="w-full text-left text-xs min-w-[640px]">
+                    <thead>
+                      <tr className="text-[10px] text-[#9CA3AF] uppercase tracking-wide font-bold border-b border-[#EDE9FE]">
+                        <th className="py-2 pr-3">User</th>
+                        <th className="py-2 pr-3">UID</th>
+                        <th className="py-2 pr-3">Country</th>
+                        <th className="py-2 pr-3">KYC</th>
+                        <th className="py-2 pr-3 text-right">Balance (XENA)</th>
+                        <th className="py-2 pr-3">Status</th>
+                        <th className="py-2 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EDE9FE]">
+                      {filteredUsers.map((u) => {
+                        const frozen = u.status === 'Frozen';
+                        const banned = u.status === 'Banned';
+                        const pendingKyc = u.status === 'Pending KYC';
+                        return (
+                          <tr key={u.id} className="hover:bg-[#F8F7FC]">
+                            <td className="py-2.5 pr-3">
+                              <span className="block font-bold text-[#171717]">{u.name} {u.registered && <span className="ml-1 text-[8px] font-extrabold text-[#16A34A] bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">New</span>}</span>
+                              <span className="block text-[10px] text-[#6B7280]">{u.email}</span>
+                              {u.registered && <span className="block text-[10px] text-[#9CA3AF]">{u.phone || ''}</span>}
+                            </td>
+                            <td className="py-2.5 pr-3"><span className="font-mono text-[10px] text-[#6D28D9] bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100">{u.uid}</span></td>
+                            <td className="py-2.5 pr-3 text-[#6B7280]">{u.country}</td>
+                            <td className="py-2.5 pr-3"><span className="text-[10px] font-bold text-[#6D28D9] bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">{u.kycTier}</span></td>
+                            <td className="py-2.5 pr-3 text-right font-mono font-bold text-[#171717]">{u.balance.toLocaleString()}</td>
+                            <td className="py-2.5 pr-3">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${banned ? 'bg-slate-800 text-white border-slate-800' : frozen ? 'bg-red-50 text-red-600 border-red-100' : pendingKyc ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-[#16A34A] border-emerald-100'}`}>{u.status}</span>
+                            </td>
+                            <td className="py-2.5 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {pendingKyc && (
+                                  <button
+                                    onClick={() => { setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, status: 'Active', kycTier: x.kycTier === 'Tier 1' ? 'Tier 2' : x.kycTier } : x)); notify(`${u.name} KYC approved`); }}
+                                    className="px-2 py-1 rounded-lg bg-purple-50 text-[#6D28D9] text-[10px] font-bold border border-purple-100 cursor-pointer"><BadgeCheck className="w-3 h-3 inline mr-0.5" />KYC</button>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, status: frozen ? 'Active' : 'Frozen' } : x));
+                                    notify(`${u.name} ${frozen ? 'unfrozen' : 'frozen'}`);
+                                  }}
+                                  className={`px-2 py-1 rounded-lg text-[10px] font-bold border cursor-pointer ${frozen ? 'bg-emerald-50 text-[#16A34A] border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'}`}
+                                >
+                                  {frozen ? 'Unfreeze' : 'Freeze'}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, status: banned ? 'Active' : 'Banned' } : x));
+                                    notify(`${u.name} ${banned ? 'unbanned' : 'banned'}`);
+                                  }}
+                                  className={`px-2 py-1 rounded-lg text-[10px] font-bold border cursor-pointer items-center gap-1 ${banned ? 'bg-emerald-50 text-[#16A34A] border-emerald-100' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
+                                >
+                                  <Ban className="w-3 h-3 inline mr-0.5" />{banned ? 'Unban' : 'Ban'}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  {filteredUsers.length === 0 && <p className="text-center text-xs text-[#9CA3AF] py-6">No users match your search.</p>}
                 </div>
               </div>
-              <div className="overflow-x-auto mt-3">
-                <table className="w-full text-left text-xs min-w-[560px]">
-                  <thead>
-                    <tr className="text-[10px] text-[#9CA3AF] uppercase tracking-wide font-bold border-b border-[#EDE9FE]">
-                      <th className="py-2 pr-3">User</th>
-                      <th className="py-2 pr-3">Country</th>
-                      <th className="py-2 pr-3">KYC</th>
-                      <th className="py-2 pr-3 text-right">Balance (XENA)</th>
-                      <th className="py-2 pr-3">Status</th>
-                      <th className="py-2 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#EDE9FE]">
-                    {filteredUsers.map((u) => {
-                      const frozen = u.status === 'Frozen';
-                      const banned = u.status === 'Banned';
-                      const pendingKyc = u.status === 'Pending KYC';
-                      return (
-                        <tr key={u.id} className="hover:bg-[#F8F7FC]">
-                          <td className="py-2.5 pr-3">
-                            <span className="block font-bold text-[#171717]">{u.name} {u.registered && <span className="ml-1 text-[8px] font-extrabold text-[#16A34A] bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">New</span>}</span>
-                            <span className="block text-[10px] text-[#6B7280]">{u.email}</span>
-                            {u.registered && <span className="block text-[10px] text-[#9CA3AF]">{u.phone || ''}</span>}
-                          </td>
-                          <td className="py-2.5 pr-3 text-[#6B7280]">{u.country}</td>
-                          <td className="py-2.5 pr-3"><span className="text-[10px] font-bold text-[#6D28D9] bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">{u.kycTier}</span></td>
-                          <td className="py-2.5 pr-3 text-right font-mono font-bold text-[#171717]">{u.balance.toLocaleString()}</td>
-                          <td className="py-2.5 pr-3">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${banned ? 'bg-slate-800 text-white border-slate-800' : frozen ? 'bg-red-50 text-red-600 border-red-100' : pendingKyc ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-[#16A34A] border-emerald-100'}`}>{u.status}</span>
-                          </td>
-                          <td className="py-2.5 text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end gap-1.5">
-                              {pendingKyc && (
-                                <button
-                                  onClick={() => { setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, status: 'Active', kycTier: x.kycTier === 'Tier 1' ? 'Tier 2' : x.kycTier } : x)); notify(`${u.name} KYC approved`); }}
-                                  className="px-2 py-1 rounded-lg bg-purple-50 text-[#6D28D9] text-[10px] font-bold border border-purple-100 cursor-pointer"><BadgeCheck className="w-3 h-3 inline mr-0.5" />KYC</button>
-                              )}
-                              <button
-                                onClick={() => {
-                                  setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, status: frozen ? 'Active' : 'Frozen' } : x));
-                                  notify(`${u.name} ${frozen ? 'unfrozen' : 'frozen'}`);
-                                }}
-                                className={`px-2 py-1 rounded-lg text-[10px] font-bold border cursor-pointer ${frozen ? 'bg-emerald-50 text-[#16A34A] border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'}`}
-                              >
-                                {frozen ? 'Unfreeze' : 'Freeze'}
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, status: banned ? 'Active' : 'Banned' } : x));
-                                  notify(`${u.name} ${banned ? 'unbanned' : 'banned'}`);
-                                }}
-                                className={`px-2 py-1 rounded-lg text-[10px] font-bold border cursor-pointer items-center gap-1 ${banned ? 'bg-emerald-50 text-[#16A34A] border-emerald-100' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
-                              >
-                                <Ban className="w-3 h-3 inline mr-0.5" />{banned ? 'Unban' : 'Ban'}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                {filteredUsers.length === 0 && <p className="text-center text-xs text-[#9CA3AF] py-6">No users match your search.</p>}
+
+              <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
+                <h3 className="text-sm font-bold text-[#171717] pb-3 border-b border-[#EDE9FE]">Adjust User Balance</h3>
+                <p className="text-[10px] text-[#6B7280] mt-2">Add or remove XENA from a registered account's balance. Use a positive amount to credit, or a negative amount to debit.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 mt-3">
+                  <input value={adjustEmail} onChange={(e) => setAdjustEmail(e.target.value)} placeholder="User email" className="px-3 py-2 bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl text-xs font-semibold focus:outline-none focus:border-[#7C3AED] transition-all" />
+                  <input value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} type="number" step="any" placeholder="Amount XENA (e.g. 100 or -50)" className="px-3 py-2 bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl text-xs font-semibold focus:outline-none focus:border-[#7C3AED] transition-all" />
+                  <input value={adjustMemo} onChange={(e) => setAdjustMemo(e.target.value)} placeholder="Reason (optional)" className="px-3 py-2 bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl text-xs font-semibold focus:outline-none focus:border-[#7C3AED] transition-all" />
+                  <button onClick={handleAdjustBalance} disabled={adjustBusy} className="px-3 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#DB2777] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60">
+                    <Banknote className="w-3.5 h-3.5" /> {adjustBusy ? 'Applying...' : 'Apply Adjustment'}
+                  </button>
+                </div>
+                {adjustError && <p className="text-[10px] font-bold text-red-600 mt-2">{adjustError}</p>}
               </div>
             </div>
           )}
@@ -724,6 +803,65 @@ export const AdminPanel: React.FC<Props> = ({
           {/* ============ P2P ============ */}
           {section === 'p2p' && (
             <div className="space-y-4">
+              {/* P2P Listing Approvals */}
+              <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
+                <h3 className="text-sm font-bold text-[#171717] pb-3 border-b border-[#EDE9FE]">Coin Listing Approvals</h3>
+                <p className="text-[10px] text-[#6B7280] mt-2">New P2P ads only appear on the marketplace after you approve them.</p>
+                <div className="divide-y divide-[#EDE9FE] mt-2">
+                  {p2pOffers.filter((o) => o.status === 'pending').map((o) => (
+                    <div key={o.id} className="py-3">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-[#171717]">{o.merchantName} — {o.type || 'BUY'}</span>
+                        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">Pending</span>
+                      </div>
+                      <span className="block text-[10px] text-[#6B7280] mt-0.5">
+                        {o.availableXena} XENA @ ${o.pricePerXena} · {String(o.listedBy || '').toLowerCase()} · {o.minLimit}–{o.maxLimit}
+                      </span>
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <button onClick={() => { onApproveP2POffer(o.id); notify(`${o.merchantName} listing approved`); }} className="px-2.5 py-1 rounded-lg bg-emerald-50 text-[#16A34A] text-[10px] font-bold border border-emerald-100 cursor-pointer"><Check className="w-3 h-3 inline mr-0.5" />Approve Listing</button>
+                        <button onClick={() => { onRejectP2POffer(o.id); notify(`${o.merchantName} listing rejected`); }} className="px-2.5 py-1 rounded-lg bg-red-50 text-red-600 text-[10px] font-bold border border-red-100 cursor-pointer"><X className="w-3 h-3 inline mr-0.5" />Reject</button>
+                      </div>
+                    </div>
+                  ))}
+                  {p2pOffers.filter((o) => o.status === 'pending').length === 0 && (
+                    <p className="text-center text-xs text-[#9CA3AF] py-4">No listings awaiting approval.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* P2P Payment Validations */}
+              <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
+                <h3 className="text-sm font-bold text-[#171717] pb-3 border-b border-[#EDE9FE]">Payment Validation</h3>
+                <p className="text-[10px] text-[#6B7280] mt-2">Validate buyer settlements to release XENA to their balances.</p>
+                <div className="divide-y divide-[#EDE9FE] mt-2">
+                  {p2pTrades.filter((t) => t.status === 'awaiting_validation').map((t) => (
+                    <div key={t.id} className="py-3">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-[#171717]">{t.merchantName} — {String(t.buyerEmail || '').toLowerCase()}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${t.status === 'awaiting_validation' ? 'bg-amber-50 text-amber-600 border-amber-100' : t.status === 'approved' ? 'bg-emerald-50 text-[#16A34A] border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
+                          {t.status === 'awaiting_validation' ? 'Awaiting Validation' : t.status === 'approved' ? 'Approved' : 'Rejected'}
+                        </span>
+                      </div>
+                      <span className="block text-[10px] text-[#6B7280] mt-0.5">
+                        ${t.fiatAmount.toLocaleString()} via {t.method} → <strong className="text-[#6D28D9]">{t.xenaAmount} XENA</strong> @ ${t.pricePerXena}
+                      </span>
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <button
+                          onClick={() => { onApproveP2PPayment(t.id); notify('Payment validated — XENA released'); }}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-50 text-[#16A34A] text-[10px] font-bold border border-emerald-100 cursor-pointer"
+                        >
+                          <Check className="w-3 h-3 inline mr-0.5" />Validate & Release
+                        </button>
+                        <button onClick={() => { onRejectP2PPayment(t.id); notify('Payment rejected'); }} className="px-2.5 py-1 rounded-lg bg-red-50 text-red-600 text-[10px] font-bold border border-red-100 cursor-pointer"><X className="w-3 h-3 inline mr-0.5" />Reject</button>
+                      </div>
+                    </div>
+                  ))}
+                  {p2pTrades.filter((t) => t.status === 'awaiting_validation').length === 0 && (
+                    <p className="text-center text-xs text-[#9CA3AF] py-4">No payments awaiting validation.</p>
+                  )}
+                </div>
+              </div>
+
               <div className="bg-white border border-[#EDE9FE] rounded-2xl p-4 shadow-sm">
                 <h3 className="text-sm font-bold text-[#171717] pb-3 border-b border-[#EDE9FE]">Merchant Verification</h3>
                 <div className="divide-y divide-[#EDE9FE]">
