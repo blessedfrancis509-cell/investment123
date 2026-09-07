@@ -39,4 +39,18 @@ npm run lint
 
 ## Deploy
 
-The repo includes a `netlify.toml` (Node 22, build `npm run build`, publish `dist`). Connect it to Netlify or use Netlify Drop with the `dist/` folder.
+The app runs as a single Node process: `server.js` (Express) serves the built SPA from `dist/` **and** a JSON-file-backed REST API at `/api/state` that persists accounts and all admin-managed data to `data/db.json`. This makes admin changes (users, deposits, referrals, announcements, promos, settings, etc.) shared across every device.
+
+### smarterasp.net (GitHub auto-deploy)
+
+1. Push this repo to GitHub.
+2. In the smarterasp panel create a **Node.js / React** site and connect it to the GitHub repo (Build & Deploy).
+3. Build command: `npm install && npm run build`
+4. Start / run command: `npm start` (server listens on `process.env.PORT`).
+5. The runtime-written file `data/db.json` is git-ignored so it persists on the server only — never commit it.
+
+> Note: `server.js` uses ESM (`"type": "module"`) and Express 4. Node 18+ required.
+
+### Static hosting (Netlify / others)
+
+Without a Node runtime the app runs in pure demo mode: `netlify.toml` (Node 22, build `npm run build`, publish `dist`) works for a static build, but admin/account changes will **not** persist or sync across devices — use the Node deployment above for full server-backed behaviour.
