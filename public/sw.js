@@ -20,6 +20,12 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) return;
 
+  // Never serve stale API data from cache — always hit the network.
+  if (request.url.includes('/api/')) {
+    event.respondWith(fetch(request).catch(() => new Response('{}', { status: 503, headers: { 'Content-Type': 'application/json' } })));
+    return;
+  }
+
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)

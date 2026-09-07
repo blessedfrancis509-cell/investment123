@@ -41,14 +41,37 @@ import {
   KeyRound,
   Gem,
 } from 'lucide-react';
-import { INITIAL_ANNOUNCEMENTS } from '../data/initialData';
 
 interface Props {
   onNavigateTab: (tab: string) => void;
   registeredUsers?: { name: string; email: string; country: string; phone: string; dob: string; referrer: string }[];
+  users: any[];
+  setUsers: React.Dispatch<React.SetStateAction<any[]>>;
+  txs: any[];
+  setTxs: React.Dispatch<React.SetStateAction<any[]>>;
+  merchants: any[];
+  setMerchants: React.Dispatch<React.SetStateAction<any[]>>;
+  disputes: any[];
+  setDisputes: React.Dispatch<React.SetStateAction<any[]>>;
+  tickets: any[];
+  setTickets: React.Dispatch<React.SetStateAction<any[]>>;
+  promos: any[];
+  setPromos: React.Dispatch<React.SetStateAction<any[]>>;
+  announcements: any[];
+  setAnnouncements: React.Dispatch<React.SetStateAction<any[]>>;
+  audit: any[];
+  setAudit: React.Dispatch<React.SetStateAction<any[]>>;
+  deposits: any[];
+  setDeposits: React.Dispatch<React.SetStateAction<any[]>>;
+  referrals: any[];
+  setReferrals: React.Dispatch<React.SetStateAction<any[]>>;
+  bonusLog: { id: string; code: string; name: string; xena: number; time: string }[];
+  setBonusLog: React.Dispatch<React.SetStateAction<{ id: string; code: string; name: string; xena: number; time: string }[]>>;
+  settings: { maintenanceMode: boolean; p2pZeroFee: boolean; withdrawApproval: boolean };
+  setSettings: React.Dispatch<React.SetStateAction<{ maintenanceMode: boolean; p2pZeroFee: boolean; withdrawApproval: boolean }>>;
 }
 
-const SEED_USERS = [
+export const SEED_USERS = [
   { id: 'u1', name: 'Alex Morgan', email: 'alex.morgan@xena.fi', country: 'Canada', kycTier: 'Tier 2', balance: 12840, status: 'Active' },
   { id: 'u2', name: 'Fatima Abubakar', email: 'fatima.a@xena.fi', country: 'Nigeria', kycTier: 'Tier 2', balance: 4520, status: 'Active' },
   { id: 'u3', name: 'David Chen', email: 'd.chen@xena.fi', country: 'Singapore', kycTier: 'Tier 1', balance: 980, status: 'Active' },
@@ -59,7 +82,7 @@ const SEED_USERS = [
   { id: 'u8', name: 'Sara Mensah', email: 'sara.m@xena.fi', country: 'Kenya', kycTier: 'Tier 1', balance: 720, status: 'Active' },
 ];
 
-const SEED_TXS = [
+export const SEED_TXS = [
   { id: 't1', user: 'Alex Morgan', type: 'Deposit', amount: 2500, unit: 'XENA', status: 'Completed', time: '2 min ago', method: 'USDT' },
   { id: 't2', user: 'Fatima Abubakar', type: 'Withdrawal', amount: 1500, unit: 'XENA', status: 'Pending', time: '8 min ago', method: 'NGN Bank' },
   { id: 't3', user: 'Omar Hassan', type: 'P2P Sell', amount: 5000, unit: 'XENA', status: 'Completed', time: '22 min ago', method: 'Escrow' },
@@ -70,7 +93,7 @@ const SEED_TXS = [
   { id: 't8', user: 'Chen Wei', type: 'Withdrawal', amount: 120, unit: 'XENA', status: 'Completed', time: '8 hrs ago', method: 'SOL' },
 ];
 
-const SEED_MERCHANTS = [
+export const SEED_MERCHANTS = [
   { id: 'm1', name: 'CryptoDesk NG', owner: 'Fatima Abubakar', verified: true, orders: 1240, rating: 98.6 },
   { id: 'm2', name: 'QuickXchange', owner: 'David Chen', verified: false, orders: 312, rating: 92.1 },
   { id: 'm3', name: 'AfriTrade Hub', owner: 'Sara Mensah', verified: true, orders: 860, rating: 97.2 },
@@ -78,26 +101,26 @@ const SEED_MERCHANTS = [
   { id: 'm5', name: 'EuroBridge', owner: 'Lina Kowalski', verified: false, orders: 145, rating: 88.4 },
 ];
 
-const SEED_DISPUTES = [
+export const SEED_DISPUTES = [
   { id: 'd1', offer: 'CryptoDesk NG', buyer: 'User 8842', seller: 'Fatima Abubakar', amount: 1500, reason: 'Payment not received', status: 'Open' },
   { id: 'd2', offer: 'Gulf Prime', buyer: 'User 1201', seller: 'Omar Hassan', amount: 3200, reason: 'Wrong NGN amount credited', status: 'Open' },
   { id: 'd3', offer: 'AfriTrade Hub', buyer: 'User 5530', seller: 'Sara Mensah', amount: 800, reason: 'Seller wants release without proof', status: 'Escalated' },
 ];
 
-const SEED_TICKETS = [
+export const SEED_TICKETS = [
   { id: 's1', user: 'Alex Morgan', subject: 'Withdrawal stuck on Pending', status: 'Open', priority: 'High', time: '12 min ago' },
   { id: 's2', user: 'Omar Hassan', subject: 'KYC tier upgrade request', status: 'Open', priority: 'Medium', time: '45 min ago' },
   { id: 's3', user: 'Chen Wei', subject: 'Cannot verify identity documents', status: 'Pending', priority: 'High', time: '2 hrs ago' },
   { id: 's4', user: 'Grace Okafor', subject: 'Account frozen — appeal', status: 'Resolved', priority: 'Low', time: '1 day ago' },
 ];
 
-const SEED_PROMOS = [
+export const SEED_PROMOS = [
   { id: 'p1', code: 'XENA25', value: 25, unit: 'USD', used: 842, cap: 1000, active: true },
   { id: 'p2', code: 'WELCOME10', value: 10, unit: 'XENA', used: 1210, cap: 2500, active: true },
   { id: 'p3', code: 'STAKER20', value: 20, unit: 'USD', used: 320, cap: 500, active: false },
 ];
 
-const SEED_AUDIT = [
+export const SEED_AUDIT = [
   { id: 'a1', action: 'Admin login', actor: 'Super Admin', detail: 'Signed in from 192.168.1.4', time: '2 min ago' },
   { id: 'a2', action: 'Wallet freeze', actor: 'admin@xena.fi', detail: 'Froze account Grace Okafor', time: '1 hr ago' },
   { id: 'a3', action: 'KYC approval', actor: 'KYC Officer', detail: 'Upgraded Chen Wei to Tier 1', time: '3 hrs ago' },
@@ -113,7 +136,7 @@ const VAULTS = [
   { category: 'Institutional', apy: 52.0, staked: 420000, plans: 64 },
 ];
 
-const SEED_DEPOSITS = [
+export const SEED_DEPOSITS = [
   { id: 'dep1', user: 'Alex Morgan', email: 'alex.morgan@xena.fi', method: 'USDT (TRC-20)', amount: 2500, unit: 'USD', xena: 8750, status: 'Completed', time: '2 min ago' },
   { id: 'dep2', user: 'Omar Hassan', email: 'omar.h@xena.fi', method: 'Bank Transfer (AED)', amount: 8000, unit: 'USD', xena: 28000, status: 'Completed', time: '22 min ago' },
   { id: 'dep3', user: 'David Chen', email: 'd.chen@xena.fi', method: 'BTC', amount: 400, unit: 'USD', xena: 1400, status: 'Completed', time: '1 hr ago' },
@@ -122,7 +145,7 @@ const SEED_DEPOSITS = [
   { id: 'dep6', user: 'Fatima Abubakar', email: 'fatima.a@xena.fi', method: 'NGN Bank Transfer', amount: 900, unit: 'USD', xena: 3150, status: 'Pending', time: '9 hrs ago' },
 ];
 
-const SEED_REFERRALS = [
+export const SEED_REFERRALS = [
   { id: 'r1', user: 'Fatima Abubakar', refCode: 'FATIMA-X', count: 24, earned: 360 },
   { id: 'r2', user: 'Omar Hassan', refCode: 'OMAR-X', count: 41, earned: 615 },
   { id: 'r3', user: 'Alex Morgan', refCode: 'ALEX-X', count: 18, earned: 270 },
@@ -137,30 +160,45 @@ const TxStatusTone: Record<string, string> = {
   Failed: 'bg-red-50 text-red-600 border-red-100',
 };
 
-export const AdminPanel: React.FC<Props> = ({ onNavigateTab, registeredUsers = [] }) => {
+export const AdminPanel: React.FC<Props> = ({
+  onNavigateTab,
+  registeredUsers = [],
+  users,
+  setUsers,
+  txs,
+  setTxs,
+  merchants,
+  setMerchants,
+  disputes,
+  setDisputes,
+  tickets,
+  setTickets,
+  promos,
+  setPromos,
+  announcements,
+  setAnnouncements,
+  audit,
+  setAudit,
+  deposits,
+  setDeposits,
+  referrals,
+  setReferrals,
+  bonusLog,
+  setBonusLog,
+  settings,
+  setSettings,
+}) => {
+  const { maintenanceMode = false, p2pZeroFee = true, withdrawApproval = true } = settings;
+  const updateSettings = (patch: Partial<{ maintenanceMode: boolean; p2pZeroFee: boolean; withdrawApproval: boolean }>) =>
+    setSettings((prev) => ({ ...prev, ...patch }));
+
   const [section, setSection] = useState<string>('dashboard');
   const [notice, setNotice] = useState<string | null>(null);
-
-  const [users, setUsers] = useState(SEED_USERS);
-  const [txs, setTxs] = useState(SEED_TXS);
-  const [merchants, setMerchants] = useState(SEED_MERCHANTS);
-  const [disputes, setDisputes] = useState(SEED_DISPUTES);
-  const [tickets, setTickets] = useState(SEED_TICKETS);
-  const [promos, setPromos] = useState(SEED_PROMOS);
-  const [announcements, setAnnouncements] = useState(INITIAL_ANNOUNCEMENTS as any[]);
-  const [audit, setAudit] = useState(SEED_AUDIT);
-  const [deposits, setDeposits] = useState(SEED_DEPOSITS);
-  const [referrals, setReferrals] = useState(SEED_REFERRALS);
-  const [bonusLog, setBonusLog] = useState<{ id: string; code: string; name: string; xena: number; time: string }[]>([]);
 
   const [userQuery, setUserQuery] = useState('');
   const [txFilter, setTxFilter] = useState('All');
   const [depositFilter, setDepositFilter] = useState('All');
   const [ticketQuery, setTicketQuery] = useState('');
-
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [p2pZeroFee, setP2pZeroFee] = useState(true);
-  const [withdrawApproval, setWithdrawApproval] = useState(true);
 
   const [showNewAnn, setShowNewAnn] = useState(false);
   const [newAnnTitle, setNewAnnTitle] = useState('');
@@ -876,9 +914,9 @@ export const AdminPanel: React.FC<Props> = ({ onNavigateTab, registeredUsers = [
                 <h3 className="text-sm font-bold text-[#171717] pb-3 border-b border-[#EDE9FE]">Platform Settings</h3>
                 <div className="space-y-3 mt-3">
                   {[
-                    { id: 'maintenance', label: 'Maintenance Mode', desc: 'Temporarily block logins & trading', value: maintenanceMode, setter: setMaintenanceMode },
-                    { id: 'p2p', label: 'P2P 0% Fee Promotion', desc: 'Keep maker & taker fees at zero', value: p2pZeroFee, setter: setP2pZeroFee },
-                    { id: 'withdraw', label: 'Manual Withdrawal Approval', desc: 'Require admin approval for payouts', value: withdrawApproval, setter: setWithdrawApproval },
+                    { id: 'maintenance', label: 'Maintenance Mode', desc: 'Temporarily block logins & trading', value: maintenanceMode, toggle: (v: boolean) => updateSettings({ maintenanceMode: v }) },
+                    { id: 'p2p', label: 'P2P 0% Fee Promotion', desc: 'Keep maker & taker fees at zero', value: p2pZeroFee, toggle: (v: boolean) => updateSettings({ p2pZeroFee: v }) },
+                    { id: 'withdraw', label: 'Manual Withdrawal Approval', desc: 'Require admin approval for payouts', value: withdrawApproval, toggle: (v: boolean) => updateSettings({ withdrawApproval: v }) },
                   ].map((t) => (
                     <div key={t.id} className="flex items-center justify-between p-3 bg-[#F8F7FC] rounded-xl border border-[#EDE9FE]">
                       <div>
@@ -888,7 +926,7 @@ export const AdminPanel: React.FC<Props> = ({ onNavigateTab, registeredUsers = [
                       <button
                         role="switch"
                         aria-checked={t.value}
-                        onClick={() => { t.setter(!t.value); notify(`${t.label} ${!t.value ? 'enabled' : 'disabled'}`); }}
+                        onClick={() => { t.toggle(!t.value); notify(`${t.label} ${!t.value ? 'enabled' : 'disabled'}`); }}
                         className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer shrink-0 ${t.value ? 'bg-[#7C3AED]' : 'bg-slate-200'}`}
                       >
                         <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${t.value ? 'translate-x-5' : ''}`} />

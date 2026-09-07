@@ -3,11 +3,12 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Zap, Sparkles, Check,
 
 interface LoginPageProps {
   onNavigateTab: (tab: string) => void;
+  onLogin?: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   onLoginSuccess?: () => void;
   onAdminLogin?: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSuccess, onAdminLogin }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLogin, onLoginSuccess, onAdminLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +19,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSucc
   const inputCls =
     'w-full bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl px-3.5 py-2.5 text-xs font-semibold text-[#171717] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED] focus:bg-white transition-all placeholder:text-[#9CA3AF] pr-10';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     if (!email.trim() || !password.trim()) {
@@ -26,15 +27,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSucc
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    if (onLogin) {
+      const result = await onLogin(email.trim(), password);
       setLoading(false);
-      const isAdmin = email.trim().toLowerCase() === 'admin@xena.fi' && password === 'xena-admin-demo';
-      if (isAdmin && onAdminLogin) {
-        onAdminLogin();
+      if (!result.ok) {
+        setError(result.error || 'Unable to sign in. Please try again.');
         return;
       }
-      onLoginSuccess ? onLoginSuccess() : onNavigateTab('home');
-    }, 900);
+      return;
+    }
+
+    const isAdmin = email.trim().toLowerCase() === 'admin@xena.fi' && password === 'xena-admin-demo';
+    if (isAdmin && onAdminLogin) {
+      setLoading(false);
+      onAdminLogin();
+      return;
+    }
+    setLoading(false);
+    onLoginSuccess ? onLoginSuccess() : onNavigateTab('home');
   };
 
   const quickFillAndSubmit = () => {
@@ -42,6 +52,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSucc
     setPassword('xena-user-demo');
     setError(null);
     setLoading(true);
+    if (onLogin) {
+      onLogin('alex.morgan@xena.fi', 'xena-user-demo').then((result) => {
+        setLoading(false);
+        if (!result.ok) setError(result.error || 'Unable to sign in.');
+      });
+      return;
+    }
     setTimeout(() => {
       setLoading(false);
       onLoginSuccess ? onLoginSuccess() : onNavigateTab('home');
@@ -53,6 +70,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateTab, onLoginSucc
     setPassword('xena-admin-demo');
     setError(null);
     setLoading(true);
+    if (onLogin) {
+      onLogin('admin@xena.fi', 'xena-admin-demo').then((result) => {
+        setLoading(false);
+        if (!result.ok) setError(result.error || 'Unable to sign in.');
+      });
+      return;
+    }
     setTimeout(() => {
       setLoading(false);
       onAdminLogin ? onAdminLogin() : onNavigateTab('home');

@@ -206,3 +206,30 @@ export interface Announcement {
   actionId?: 'p2p' | 'staking';
   publishedBy?: string;
 }
+
+export interface RegisteredUserRecord {
+  name: string;
+  email: string;
+  password: string;
+  country: string;
+  phone: string;
+  dob: string;
+  referrer: string;
+}
+
+export interface Account extends RegisteredUserRecord {
+  id: string;
+  xenaId: string;
+  xenaCode: string;
+  kycTier: string;
+  status: string;
+  joined: string;
+  twoFactorEnabled: boolean;
+  pinSet: boolean;
+  verifiedAccountsCount: number;
+  balances: UserBalances;
+  transactions: Transaction[];
+  investments: InvestmentPlan[];
+  notifications: NotificationItem[];
+  redeemedBonusCodes: string[];
+}

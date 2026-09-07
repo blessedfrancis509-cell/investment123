@@ -4,7 +4,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Zap, Sparkles, Check,
 interface SignupPageProps {
   onNavigateTab: (tab: string) => void;
   onSignupSuccess?: () => void;
-  onRegister?: (data: { name: string; email: string; country: string; phone: string; dob: string; referrer: string }) => void;
+  onRegister?: (data: { name: string; email: string; password: string; country: string; phone: string; dob: string; referrer: string }) => Promise<{ ok: boolean; error?: string }>;
 }
 
 const COUNTRIES = [
@@ -79,12 +79,19 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupS
       return;
     }
     setLoading(true);
+    if (onRegister) {
+      const result = await onRegister({ name, email, password, country, phone, dob, referrer: referral.trim() });
+      setLoading(false);
+      if (!result.ok) {
+        setError(result.error || 'Unable to create your account. Please try again.');
+        return;
+      }
+      setDone(true);
+      return;
+    }
     setTimeout(() => {
       setLoading(false);
       setDone(true);
-      if (onRegister) {
-        onRegister({ name, email, country, phone, dob, referrer: referral.trim() });
-      }
     }, 900);
   };
 

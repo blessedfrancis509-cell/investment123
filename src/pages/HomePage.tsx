@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowRight, TrendingUp, ShieldCheck, Users, PiggyBank, Clock3, Wallet, Sparkles, Plus, Check, Newspaper, Calendar, Gift, Copy, UserPlus, Zap } from 'lucide-react';
-import { UserProfile, UserBalances, MarketStats, InvestmentPlan, Transaction, P2POffer } from '../types';
+import { UserProfile, UserBalances, MarketStats, InvestmentPlan, Transaction, P2POffer, Announcement } from '../types';
 import { WelcomeSection } from '../components/WelcomeSection';
 import { MainBalanceCard } from '../components/MainBalanceCard';
 import { QuickActions } from '../components/QuickActions';
@@ -27,6 +27,7 @@ interface HomePageProps {
   onOpenSecurity: () => void;
   referralCode?: string;
   referralCount?: number;
+  announcements?: Announcement[];
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
@@ -47,6 +48,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   onOpenSecurity,
   referralCode = 'XENA-REF',
   referralCount = 0,
+  announcements = INITIAL_ANNOUNCEMENTS,
 }) => {
   const topInvestment = investments[0];
   const recentThreeTx = transactions.slice(0, 3);
@@ -145,7 +147,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-          {INITIAL_ANNOUNCEMENTS.slice(0, 4).map((ann) => (
+          {announcements.slice(0, 4).map((ann) => (
             <button
               key={ann.id}
               onClick={() => onNavigateTab('announcements')}

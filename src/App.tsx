@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   INITIAL_USER_PROFILE,
   INITIAL_BALANCES,
@@ -7,6 +7,7 @@ import {
   INITIAL_INVESTMENT_PLANS,
   INITIAL_P2P_OFFERS,
   INITIAL_NOTIFICATIONS,
+  INITIAL_ANNOUNCEMENTS,
 } from './data/initialData';
 import {
   UserProfile,
@@ -16,7 +17,21 @@ import {
   InvestmentPlan,
   P2POffer,
   NotificationItem,
+  Account,
+  RegisteredUserRecord,
 } from './types';
+import {
+  SEED_USERS,
+  SEED_TXS,
+  SEED_MERCHANTS,
+  SEED_DISPUTES,
+  SEED_TICKETS,
+  SEED_PROMOS,
+  SEED_AUDIT,
+  SEED_DEPOSITS,
+  SEED_REFERRALS,
+} from './pages/AdminPanel';
+import { getState, saveState } from './lib/api';
 
 // Layout Components
 import { Header } from './components/Header';
@@ -59,7 +74,27 @@ export default function App() {
 
   // Active View / Page Routing
   const [activeTab, setActiveTab] = useState<string>('home');
-  const [registeredUsers, setRegisteredUsers] = useState<{ name: string; email: string; country: string; phone: string; dob: string; referrer: string }[]>([]);
+
+  // Persisted accounts (registered users) + admin-managed data (server-backed)
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [users, setUsers] = useState(SEED_USERS);
+  const [txs, setTxs] = useState(SEED_TXS);
+  const [merchants, setMerchants] = useState(SEED_MERCHANTS);
+  const [disputes, setDisputes] = useState(SEED_DISPUTES);
+  const [tickets, setTickets] = useState(SEED_TICKETS);
+  const [promos, setPromos] = useState(SEED_PROMOS);
+  const [announcements, setAnnouncements] = useState(INITIAL_ANNOUNCEMENTS as any[]);
+  const [audit, setAudit] = useState(SEED_AUDIT);
+  const [deposits, setDeposits] = useState(SEED_DEPOSITS);
+  const [referrals, setReferrals] = useState(SEED_REFERRALS);
+  const [bonusLog, setBonusLog] = useState<{ id: string; code: string; name: string; xena: number; time: string }[]>([]);
+  const [adminSettings, setAdminSettings] = useState({ maintenanceMode: false, p2pZeroFee: true, withdrawApproval: true });
+  const [booted, setBooted] = useState(false);
+
+  const registeredUsers = useMemo(
+    () => accounts.map((a) => ({ name: a.name, email: a.email, country: a.country, phone: a.phone, dob: a.dob, referrer: a.referrer })),
+    [accounts]
+  );
 
   // Modal States
   const [depositWithdrawOpen, setDepositWithdrawOpen] = useState(false);
@@ -99,6 +134,85 @@ export default function App() {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+
+  // Boot: load persisted server state once on mount (fall back to seeds offline)
+  useEffect(() => {
+    (async () => {
+      try {
+        const state = await getState();
+        if (state) {
+          if (state.users) setUsers(state.users);
+          if (state.txs) setTxs(state.txs);
+          if (state.merchants) setMerchants(state.merchants);
+          if (state.disputes) setDisputes(state.disputes);
+          if (state.tickets) setTickets(state.tickets);
+          if (state.promos) setPromos(state.promos);
+          if (state.announcements) setAnnouncements(state.announcements);
+          if (state.audit) setAudit(state.audit);
+          if (state.deposits) setDeposits(state.deposits);
+          if (state.referrals) setReferrals(state.referrals);
+          if (state.bonusLog) setBonusLog(state.bonusLog);
+          if (state.settings) setAdminSettings(state.settings);
+          if (state.accounts) setAccounts(state.accounts);
+        }
+      } catch {
+        // offline — keep seed defaults
+      }
+      setBooted(true);
+    })();
+  }, []);
+
+  // Persist: push the full shared server state whenever any admin/account data changes
+  const persistedSnapshot = useMemo(
+    () =>
+      JSON.stringify({
+        users,
+        txs,
+        deposits,
+        referrals,
+        bonusLog,
+        merchants,
+        disputes,
+        tickets,
+        promos,
+        announcements,
+        audit,
+        settings: adminSettings,
+        accounts,
+      }),
+    [users, txs, deposits, referrals, bonusLog, merchants, disputes, tickets, promos, announcements, audit, adminSettings, accounts]
+  );
+
+  useEffect(() => {
+    if (!booted) return;
+    const t = setTimeout(() => {
+      saveState(persistedSnapshot).catch(() => {});
+    }, 400);
+    return () => clearTimeout(t);
+  }, [persistedSnapshot, booted]);
+
+  // Sync: keep the logged-in account's live session data persisted
+  useEffect(() => {
+    setAccounts((prev) =>
+      prev.map((a) =>
+        a.email.toLowerCase() === user.email.toLowerCase()
+          ? {
+              ...a,
+              name: user.name,
+              kycTier: user.kycTier,
+              twoFactorEnabled: user.twoFactorEnabled,
+              pinSet: user.pinSet,
+              verifiedAccountsCount: user.verifiedAccountsCount,
+              balances,
+              transactions,
+              investments,
+              notifications,
+              redeemedBonusCodes,
+            }
+          : a
+      )
+    );
+  }, [user, balances, transactions, investments, notifications, redeemedBonusCodes]);
 
   // Handlers for state updates
   const handleBalanceChange = (amountDelta: number, newTx: Transaction) => {
@@ -297,6 +411,102 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const applyAccount = (acc: Account) => {
+    setUser({
+      name: acc.name,
+      email: acc.email,
+      kycTier: acc.kycTier,
+      xenaId: acc.xenaId,
+      xenaCode: acc.xenaCode,
+      twoFactorEnabled: acc.twoFactorEnabled,
+      pinSet: acc.pinSet,
+      verifiedAccountsCount: acc.verifiedAccountsCount,
+      role: 'user',
+    });
+    setBalances({ ...INITIAL_BALANCES, ...acc.balances });
+    setTransactions(acc.transactions || []);
+    setInvestments(acc.investments || []);
+    setNotifications(acc.notifications || []);
+    setRedeemedBonusCodes(acc.redeemedBonusCodes || []);
+  };
+
+  const resetDemoSession = () => {
+    setUser(INITIAL_USER_PROFILE);
+    setBalances(INITIAL_BALANCES);
+    setTransactions(INITIAL_TRANSACTIONS);
+    setInvestments(INITIAL_INVESTMENT_PLANS);
+    setNotifications(INITIAL_NOTIFICATIONS);
+    setRedeemedBonusCodes([]);
+  };
+
+  const makeAccount = (data: RegisteredUserRecord): Account => {
+    const ts = Date.now().toString();
+    return {
+      ...data,
+      id: `acc-${ts.slice(-6)}`,
+      xenaId: `XN-${Math.floor(1000000 + Math.random() * 9000000)}`,
+      xenaCode: `xena-${Math.floor(10000000 + Math.random() * 89999999)}`,
+      kycTier: 'Tier 1 (Pending)',
+      status: 'Active',
+      joined: new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
+      twoFactorEnabled: false,
+      pinSet: false,
+      verifiedAccountsCount: 0,
+      balances: {
+        ...INITIAL_BALANCES,
+        totalXena: 0,
+        totalBalance: 0,
+        change24hAmount: 0,
+        change24hPercent: 0,
+        availableXena: 0,
+        investedXena: 0,
+        averageBuyPrice: 0,
+        stakedXena: 0,
+        lockedInOrders: 0,
+        nairaBalance: 0,
+      },
+      transactions: [],
+      investments: [],
+      notifications: [],
+      redeemedBonusCodes: [],
+    };
+  };
+
+  const handleLogin = async (email: string, password: string): Promise<{ ok: boolean; error?: string }> => {
+    const e = email.trim().toLowerCase();
+    if (e === 'admin@xena.fi' && password === 'xena-admin-demo') {
+      setUser((prev) => ({ ...prev, role: 'admin', name: 'Administrator', email: 'admin@xena.fi', kycTier: 'Staff', xenaId: 'XN-ADMIN-01', xenaCode: 'xena-admin' }));
+      handleNavSelect('admin');
+      return { ok: true };
+    }
+    const acc = accounts.find((a) => a.email.toLowerCase() === e);
+    if (acc) {
+      if (acc.password !== password) {
+        return { ok: false, error: 'Incorrect password. Please try again.' };
+      }
+      applyAccount(acc);
+      handleNavSelect('home');
+      return { ok: true };
+    }
+    if (e === 'alex.morgan@xena.fi' && password === 'xena-user-demo') {
+      resetDemoSession();
+      handleNavSelect('home');
+      return { ok: true };
+    }
+    return { ok: false, error: 'No account found with that email. Please create an account first.' };
+  };
+
+  const handleRegister = async (data: RegisteredUserRecord): Promise<{ ok: boolean; error?: string }> => {
+    const e = data.email.trim().toLowerCase();
+    if (accounts.some((a) => a.email.toLowerCase() === e)) {
+      return { ok: false, error: 'An account with this email already exists. Please sign in instead.' };
+    }
+    const newAcc = makeAccount(data);
+    setAccounts((prev) => [newAcc, ...prev]);
+    applyAccount(newAcc);
+    return { ok: true };
+  };
+
   // Render the current active dedicated page
   const renderCurrentPage = () => {
     switch (activeTab) {
@@ -318,6 +528,7 @@ export default function App() {
             onSelectPlan={handleSelectPlan}
             onSelectP2POffer={handleSelectP2POffer}
             onOpenSecurity={() => handleNavSelect('security')}
+            announcements={announcements}
           />
         );
 
@@ -440,6 +651,7 @@ export default function App() {
       case 'announcements':
         return (
           <AnnouncementsPage
+            announcements={announcements}
             onExploreP2P={() => handleNavSelect('p2p')}
             onExploreStaking={() => handleNavSelect('investments')}
           />
@@ -459,6 +671,7 @@ export default function App() {
         return (
           <LoginPage
             onNavigateTab={handleNavSelect}
+            onLogin={handleLogin}
             onLoginSuccess={() => handleNavSelect('home')}
             onAdminLogin={() => {
               setUser((prev) => ({ ...prev, role: 'admin', name: 'Administrator', email: 'admin@xena.fi' }));
@@ -472,12 +685,41 @@ export default function App() {
           <SignupPage
             onNavigateTab={handleNavSelect}
             onSignupSuccess={() => handleNavSelect('home')}
-            onRegister={(data) => setRegisteredUsers((prev) => [...prev, data])}
+            onRegister={handleRegister}
           />
         );
 
       case 'admin':
-        return <AdminPanel onNavigateTab={handleNavSelect} registeredUsers={registeredUsers} />;
+        return (
+          <AdminPanel
+            onNavigateTab={handleNavSelect}
+            registeredUsers={registeredUsers}
+            users={users}
+            setUsers={setUsers}
+            txs={txs}
+            setTxs={setTxs}
+            merchants={merchants}
+            setMerchants={setMerchants}
+            disputes={disputes}
+            setDisputes={setDisputes}
+            tickets={tickets}
+            setTickets={setTickets}
+            promos={promos}
+            setPromos={setPromos}
+            announcements={announcements}
+            setAnnouncements={setAnnouncements}
+            audit={audit}
+            setAudit={setAudit}
+            deposits={deposits}
+            setDeposits={setDeposits}
+            referrals={referrals}
+            setReferrals={setReferrals}
+            bonusLog={bonusLog}
+            setBonusLog={setBonusLog}
+            settings={adminSettings}
+            setSettings={setAdminSettings}
+          />
+        );
 
       default:
         return (
@@ -505,6 +747,7 @@ export default function App() {
             }}
             referralCode={`XENA-${user.name.split(' ')[0].toUpperCase()}`}
             referralCount={registeredUsers.filter((ru) => ru.referrer && ru.referrer.toUpperCase() === `XENA-${user.name.split(' ')[0].toUpperCase()}`).length}
+            announcements={announcements}
           />
         );
     }
