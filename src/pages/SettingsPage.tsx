@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings as SettingsIcon,
   UserRound,
@@ -34,6 +34,7 @@ import {
   Clock3,
 } from 'lucide-react';
 import { UserProfile } from '../types';
+import { getSupportConversations, sendSupportMessage, getAuthToken } from '../lib/api';
 
 interface SettingsPageProps {
   user: UserProfile;
@@ -49,8 +50,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
 
   const [supportInput, setSupportInput] = useState<string>('');
   const [supportMessages, setSupportMessages] = useState<{ from: 'user' | 'agent'; text: string; time: string }[]>([
-    { from: 'agent', text: 'Hi Alex! Welcome to XENA Customer Support. How can we help you today?', time: 'Just now' },
+    { from: 'agent', text: 'Hi! Welcome to XENA Customer Support. How can we help you today?', time: 'Just now' },
   ]);
+  const [supportBusy, setSupportBusy] = useState(false);
+
+  useEffect(() => {
+    if (!getAuthToken()) return;
+    getSupportConversations().then((res) => {
+      if (res.ok && res.conversations && res.conversations.length > 0) {
+        const conv = res.conversations[res.conversations.length - 1];
+        if (conv.messages && conv.messages.length > 0) {
+          setSupportMessages(conv.messages.map((m) => ({ from: m.from, text: m.text, time: m.time })));
+        }
+      }
+    });
+  }, []);
 
   // Account
   const [displayName, setDisplayName] = useState(user.name);
@@ -170,18 +184,27 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateSecuri
     </div>
   );
 
-  const handleSendSupport = () => {
+  const handleSendSupport = async () => {
     const text = supportInput.trim();
     if (!text) return;
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setSupportMessages((prev) => [...prev, { from: 'user', text, time: now }]);
     setSupportInput('');
-    setTimeout(() => {
-      setSupportMessages((prev) => [
-        ...prev,
-        { from: 'agent', text: 'Thanks for your message! A support specialist will review this and reply shortly. For urgent issues, please call our 24/7 line.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
-      ]);
-    }, 1000);
+    if (!getAuthToken()) {
+      setTimeout(() => {
+        setSupportMessages((prev) => [
+          ...prev,
+          { from: 'agent', text: 'Thanks for your message! A support specialist will review this and reply shortly. For urgent issues, please call our 24/7 line.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+        ]);
+      }, 1000);
+      return;
+    }
+    setSupportBusy(true);
+    const res = await sendSupportMessage(text);
+    setSupportBusy(false);
+    if (res.ok && res.conversation) {
+      setSupportMessages(res.conversation.messages.map((m) => ({ from: m.from, text: m.text, time: m.time })));
+    }
   };
 
   return (

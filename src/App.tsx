@@ -32,7 +32,7 @@ import {
   SEED_DEPOSITS,
   SEED_REFERRALS,
 } from './pages/AdminPanel';
-import { getState, saveState, registerAccount, loginAccount, saveAccount, changeAccountPassword, getAuthToken, adjustUserBalance, submitP2POffer, approveP2POffer, rejectP2POffer, submitP2PPayment, approveP2PPayment, rejectP2PPayment } from './lib/api';
+import { getState, saveState, registerAccount, loginAccount, saveAccount, changeAccountPassword, getAuthToken, adjustUserBalance, submitP2POffer, approveP2POffer, rejectP2POffer, submitP2PPayment, approveP2PPayment, rejectP2PPayment, setXenaPrice, deleteUserAccount } from './lib/api';
 
 // Layout Components
 import { Header } from './components/Header';
@@ -126,23 +126,6 @@ export default function App() {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  // Live Price Ticker Simulation (Subtle micro-variations)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const delta = (Math.random() - 0.48) * 0.005;
-      setMarketStats((prev) => {
-        const newPrice = Math.max(2.4, +(prev.price + delta).toFixed(4));
-        return {
-          ...prev,
-          price: newPrice,
-          high24h: Math.max(prev.high24h, newPrice),
-          low24h: Math.min(prev.low24h, newPrice),
-        };
-      });
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
   // Boot: load persisted server state once on mount (fall back to seeds offline)
   useEffect(() => {
     (async () => {
@@ -164,6 +147,7 @@ export default function App() {
           if (state.accounts) setAccounts(state.accounts);
           if (state.p2pOffers) setP2POffers(state.p2pOffers);
           if (state.p2pTrades) setP2PTrades(state.p2pTrades);
+          if (state.xenaPrice) applyGlobalPrice(Number(state.xenaPrice));
         }
       } catch {
         // offline — keep seed defaults
@@ -402,6 +386,14 @@ export default function App() {
     return { ok: true };
   };
 
+  const handleDeleteUserAccount = async (targetEmail: string): Promise<{ ok: boolean; error?: string }> => {
+    const res = await deleteUserAccount(targetEmail);
+    if (!res.ok) return { ok: false, error: res.error };
+    const e = targetEmail.trim().toLowerCase();
+    setAccounts((prev) => prev.filter((a) => a.email.toLowerCase() !== e));
+    return { ok: true };
+  };
+
   const handleStakeNewPlan = (plan: InvestmentPlan): boolean => {
     if (balances.availableXena < plan.investedAmount) {
       alert(`Insufficient available XENA to stake this plan. Minimum required: ${plan.investedAmount} XENA`);
@@ -564,6 +556,32 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const applyGlobalPrice = (price: number) => {
+    const p = Math.round(price * 10000) / 10000;
+    setMarketStats((prev) => ({
+      ...prev,
+      price: p,
+      high24h: Math.max(prev.high24h, p),
+      low24h: Math.min(prev.low24h, p),
+    }));
+    setBalances((prev) => ({ ...prev, currentPrice: p }));
+  };
+
+  const handleSetXenaPrice = async (price: number): Promise<{ ok: boolean; error?: string }> => {
+    const res = await setXenaPrice(price);
+    if (!res.ok) return { ok: false, error: res.error };
+    if (res.price) {
+      applyGlobalPrice(res.price);
+      setAccounts((prev) =>
+        prev.map((a) => ({
+          ...a,
+          balances: { ...a.balances, currentPrice: res.price as number },
+        }))
+      );
+    }
+    return { ok: true };
+  };
+
   const applyAccount = (acc: Account) => {
     setUser({
       name: acc.name,
@@ -586,18 +604,6 @@ export default function App() {
   const handleLogin = async (email: string, password: string): Promise<{ ok: boolean; error?: string }> => {
     const result = await loginAccount(email, password);
     if (!result.ok) {
-      // Demo guest fallback: alex.morgan@xena.fi is a seeded showcase profile,
-      // not a real account — allow the offline/demo login for preview purposes.
-      if (email.trim().toLowerCase() === 'alex.morgan@xena.fi' && password === 'xena-user-demo') {
-        setUser(INITIAL_USER_PROFILE);
-        setBalances(INITIAL_BALANCES);
-        setTransactions(INITIAL_TRANSACTIONS);
-        setInvestments(INITIAL_INVESTMENT_PLANS);
-        setNotifications(INITIAL_NOTIFICATIONS);
-        setRedeemedBonusCodes([]);
-        handleNavSelect('home');
-        return { ok: true };
-      }
       return { ok: false, error: result.error };
     }
     if (result.role === 'admin') {
@@ -826,6 +832,9 @@ export default function App() {
             onRejectP2PPayment={handleRejectP2PPayment}
             accounts={accounts}
             onAdjustBalance={handleAdjustUserBalance}
+            onDeleteAccount={handleDeleteUserAccount}
+            xenaPrice={marketStats.price}
+            onSetXenaPrice={handleSetXenaPrice}
             disputes={disputes}
             setDisputes={setDisputes}
             tickets={tickets}

@@ -171,6 +171,7 @@ const SEED_STATE = {
   bonusLog: [],
   p2pOffers: [],
   p2pTrades: [],
+  supportConvs: [],
   announcements: [
     {
       id: 'ann-1',
@@ -212,6 +213,7 @@ const SEED_STATE = {
     },
   ],
   settings: { maintenanceMode: false, p2pZeroFee: true, withdrawApproval: true },
+  xenaPrice: 2.85,
   accounts: [],
   tokens: {},
 };
@@ -230,6 +232,40 @@ function loadDb() {
 }
 
 let db = loadDb();
+
+// Showcase account (rich seeded profile), created server-side with a real
+// scrypt hash so the demo login works via normal auth — no client fallback.
+function seedShowcaseAccount() {
+  const email = 'alex.morgan@xena.fi';
+  if ((db.accounts || []).some((a) => a.email === email)) return;
+  const { salt, hash } = hashPassword('xena-user-demo');
+  const balance = {
+    totalXena: 2850.5, usdRate: 1.0, change24hAmount: 320.5, change24hPercent: 12.65,
+    availableXena: 2850.5, investedXena: 0, averageBuyPrice: 2.15, currentPrice: db.xenaPrice || 2.85,
+    stakedXena: 0, lockedInOrders: 0, nairaBalance: 2450000,
+  };
+  db.accounts = db.accounts || [];
+  db.accounts.unshift({
+    name: 'Alex Morgan', email, country: 'Canada', phone: '+1 416 555 0198', dob: '1991-04-18', referrer: '',
+    id: 'acct-alex', xenaId: 'XN-000001', xenaCode: 'ALEX-X', kycTier: 'Tier 2', status: 'Active',
+    joined: new Date().toLocaleDateString(), twoFactorEnabled: true, pinSet: true, verifiedAccountsCount: 2,
+    salt, hash,
+    balances: balance,
+    transactions: [
+      { id: 'tx-seed-1', title: 'Deposit', type: 'deposit', amount: 500, unit: 'XENA', status: 'Completed', timestamp: 'Today, 14:23', paymentMethod: 'Instant SEPA Bank Transfer', fee: 0 },
+      { id: 'tx-seed-2', title: 'P2P Sell', type: 'p2p', amount: 120, unit: 'XENA', status: 'Completed', timestamp: 'Yesterday, 09:12', paymentMethod: 'NGN Bank Transfer', fee: 0, counterparty: 'CryptoDesk NG' },
+      { id: 'tx-seed-3', title: 'Staking Yield', type: 'yield', amount: 38.25, unit: 'XENA', status: 'Completed', timestamp: 'May 22, 2026', paymentMethod: 'Auto-compound', fee: 0 },
+    ],
+    investments: [],
+    notifications: [
+      { id: 'n-seed-1', title: 'Welcome to XENA', message: 'Your secure exchange account is ready. Set up 2FA for extra protection.', timestamp: 'Just now', read: false, type: 'general' },
+    ],
+    redeemedBonusCodes: [],
+  });
+  saveDb();
+}
+
+seedShowcaseAccount();
 
 function saveDb() {
   try {
@@ -373,6 +409,23 @@ app.post('/api/account/password', (req, res) => {
   res.json({ ok: true });
 });
 
+// ---------- Admin: Set XENA Price (global, reflected everywhere) ----------
+app.post('/api/admin/price', (req, res) => {
+  const { token, price } = req.body || {};
+  if (!requireAdminToken(token)) {
+    res.status(401).json({ ok: false, error: 'Admin access required.' });
+    return;
+  }
+  const p = Number(price);
+  if (!p || p <= 0) {
+    res.status(400).json({ ok: false, error: 'Enter a valid price greater than 0.' });
+    return;
+  }
+  db.xenaPrice = Math.round(p * 10000) / 10000;
+  saveDb();
+  res.json({ ok: true, price: db.xenaPrice });
+});
+
 // ---------- Admin: Adjust User Balance ----------
 app.post('/api/admin/adjust-balance', (req, res) => {
   const { token, targetEmail, amount, memo } = req.body || {};
@@ -420,6 +473,148 @@ app.post('/api/admin/adjust-balance', (req, res) => {
   });
   saveDb();
   res.json({ ok: true, newBalance: acc.balances.availableXena });
+});
+
+// ---------- Admin: Delete User Account ----------
+app.post('/api/admin/delete-account', (req, res) => {
+  const { token, targetEmail } = req.body || {};
+  if (!requireAdminToken(token)) {
+    res.status(401).json({ ok: false, error: 'Admin access required.' });
+    return;
+  }
+  const e = String(targetEmail || '').trim().toLowerCase();
+  if (!e) {
+    res.status(400).json({ ok: false, error: 'Missing target email.' });
+    return;
+  }
+  const idx = (db.accounts || []).findIndex((a) => a.email === e);
+  if (idx === -1) {
+    res.status(404).json({ ok: false, error: 'No account found with that email.' });
+    return;
+  }
+  db.accounts.splice(idx, 1);
+  if (db.tokens && db.tokens[e]) delete db.tokens[e];
+  db.supportConvs = (db.supportConvs || []).filter((c) => c.email !== e);
+  saveDb();
+  res.json({ ok: true });
+});
+
+// ---------- Support Conversations (user messages + admin replies) ----------
+const convFor = (email) => (db.supportConvs || []).find((c) => c.email === email);
+
+app.post('/api/support/conversations', (req, res) => {
+  const { token } = req.body || {};
+  const email = emailForToken(token);
+  if (!email) {
+    res.status(401).json({ ok: false, error: 'Session invalid. Please sign in again.' });
+    return;
+  }
+  let list = db.supportConvs || [];
+  if (email !== ADMIN_EMAIL) {
+    list = list.filter((c) => c.email === email);
+    if (list.length === 0 && req.body.ensure !== false) {
+      const acc = (db.accounts || []).find((a) => a.email === email);
+      list = [{
+        id: `cs-${Date.now()}-${Math.floor(Math.random() * 999)}`,
+        email,
+        userName: acc ? acc.name : '',
+        status: 'open',
+        createdAt: Date.now(),
+        messages: [],
+      }];
+      db.supportConvs = db.supportConvs || [];
+      db.supportConvs.push(list[0]);
+      saveDb();
+    }
+  }
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true, conversations: list });
+});
+
+app.post('/api/support/messages', (req, res) => {
+  const { token, text } = req.body || {};
+  const email = emailForToken(token);
+  if (!email) {
+    res.status(401).json({ ok: false, error: 'Session invalid. Please sign in again.' });
+    return;
+  }
+  const t = String(text || '').trim();
+  if (!t) {
+    res.status(400).json({ ok: false, error: 'Message cannot be empty.' });
+    return;
+  }
+  db.supportConvs = db.supportConvs || [];
+  let conv = convFor(email);
+  if (!conv) {
+    const acc = (db.accounts || []).find((a) => a.email === email);
+    conv = {
+      id: `cs-${Date.now()}-${Math.floor(Math.random() * 999)}`,
+      email,
+      userName: acc ? acc.name : '',
+      status: 'open',
+      createdAt: Date.now(),
+      messages: [],
+    };
+    db.supportConvs.push(conv);
+  }
+  conv.messages = conv.messages || [];
+  conv.messages.push({ from: 'user', text: t, time: new Date().toLocaleString() });
+  conv.status = 'open';
+  conv.updatedAt = Date.now();
+  saveDb();
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true, conversation: conv });
+});
+
+app.post('/api/support/reply', (req, res) => {
+  const { token, email, text } = req.body || {};
+  if (!requireAdminToken(token)) {
+    res.status(401).json({ ok: false, error: 'Admin access required.' });
+    return;
+  }
+  const e = String(email || '').trim().toLowerCase();
+  const t = String(text || '').trim();
+  if (!e || !t) {
+    res.status(400).json({ ok: false, error: 'Missing email or reply text.' });
+    return;
+  }
+  db.supportConvs = db.supportConvs || [];
+  let conv = convFor(e);
+  if (!conv) {
+    const acc = (db.accounts || []).find((a) => a.email === e);
+    conv = {
+      id: `cs-${Date.now()}-${Math.floor(Math.random() * 999)}`,
+      email: e,
+      userName: acc ? acc.name : e,
+      status: 'open',
+      createdAt: Date.now(),
+      messages: [],
+    };
+    db.supportConvs.push(conv);
+  }
+  conv.messages = conv.messages || [];
+  conv.messages.push({ from: 'agent', text: t, time: new Date().toLocaleString() });
+  conv.status = 'open';
+  conv.updatedAt = Date.now();
+  saveDb();
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true, conversation: conv });
+});
+
+app.post('/api/support/resolve', (req, res) => {
+  const { token, conversationId, status } = req.body || {};
+  if (!requireAdminToken(token)) {
+    res.status(401).json({ ok: false, error: 'Admin access required.' });
+    return;
+  }
+  const conv = (db.supportConvs || []).find((c) => c.id === conversationId);
+  if (!conv) {
+    res.status(404).json({ ok: false, error: 'Conversation not found.' });
+    return;
+  }
+  conv.status = status === 'resolved' ? 'resolved' : 'open';
+  saveDb();
+  res.json({ ok: true, status: conv.status });
 });
 
 // ---------- P2P Listings & Payment Validation (admin approval required) ----------
@@ -596,6 +791,4 @@ if (fs.existsSync(DIST_DIR)) {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`XENA Exchange server listening on port ${PORT}`);
-});
+app.listen(PORT);

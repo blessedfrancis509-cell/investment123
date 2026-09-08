@@ -161,6 +161,63 @@ export function clearAuthToken() {
   setAuthToken(null);
 }
 
+// ---------- Admin: Set XENA Price ----------
+export async function setXenaPrice(price: number): Promise<{ ok: boolean; error?: string; price?: number }> {
+  const token = getAuthToken();
+  if (!token) return { ok: false, error: 'You must be signed in.' };
+  const out = await post('/api/admin/price', { token, price });
+  if (!out) return { ok: false, error: 'Network error.' };
+  if (!out.data.ok) return { ok: false, error: out.data.error || 'Unable to update price.' };
+  return { ok: true, price: out.data.price };
+}
+
+// ---------- Admin: Delete User Account ----------
+export async function deleteUserAccount(targetEmail: string): Promise<{ ok: boolean; error?: string }> {
+  const token = getAuthToken();
+  if (!token) return { ok: false, error: 'You must be signed in.' };
+  const out = await post('/api/admin/delete-account', { token, targetEmail });
+  if (!out) return { ok: false, error: 'Network error.' };
+  if (!out.data.ok) return { ok: false, error: out.data.error || 'Unable to delete account.' };
+  return { ok: true };
+}
+
+// ---------- Support Conversations ----------
+export async function getSupportConversations(): Promise<{ ok: boolean; error?: string; conversations?: SupportConversation[] }> {
+  const token = getAuthToken();
+  if (!token) return { ok: false, error: 'You must be signed in.' };
+  const out = await post('/api/support/conversations', { token });
+  if (!out) return { ok: false, error: 'Network error.' };
+  if (!out.data.ok) return { ok: false, error: out.data.error || 'Unable to load conversations.' };
+  return { ok: true, conversations: out.data.conversations };
+}
+
+export async function sendSupportMessage(text: string): Promise<{ ok: boolean; error?: string; conversation?: SupportConversation }> {
+  const token = getAuthToken();
+  if (!token) return { ok: false, error: 'You must be signed in.' };
+  const out = await post('/api/support/messages', { token, text });
+  if (!out) return { ok: false, error: 'Network error.' };
+  if (!out.data.ok) return { ok: false, error: out.data.error || 'Unable to send message.' };
+  return { ok: true, conversation: out.data.conversation };
+}
+
+export async function replySupportConversation(email: string, text: string): Promise<{ ok: boolean; error?: string; conversation?: SupportConversation }> {
+  const token = getAuthToken();
+  if (!token) return { ok: false, error: 'You must be signed in.' };
+  const out = await post('/api/support/reply', { token, email, text });
+  if (!out) return { ok: false, error: 'Network error.' };
+  if (!out.data.ok) return { ok: false, error: out.data.error || 'Unable to send reply.' };
+  return { ok: true, conversation: out.data.conversation };
+}
+
+export async function resolveSupportConversation(conversationId: string, status: 'open' | 'resolved'): Promise<{ ok: boolean; error?: string }> {
+  const token = getAuthToken();
+  if (!token) return { ok: false, error: 'You must be signed in.' };
+  const out = await post('/api/support/resolve', { token, conversationId, status });
+  if (!out) return { ok: false, error: 'Network error.' };
+  if (!out.data.ok) return { ok: false, error: out.data.error || 'Unable to update conversation.' };
+  return { ok: true };
+}
+
 // ---------- Admin: Adjust User Balance ----------
 export async function adjustUserBalance(targetEmail: string, amount: number, memo?: string): Promise<{ ok: boolean; error?: string; newBalance?: number }> {
   const token = getAuthToken();

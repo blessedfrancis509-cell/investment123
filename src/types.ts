@@ -235,6 +235,22 @@ export interface RegisteredUserRecord {
   referrer: string;
 }
 
+export interface SupportMessage {
+  from: 'user' | 'agent';
+  text: string;
+  time: string;
+}
+
+export interface SupportConversation {
+  id: string;
+  email: string;
+  userName: string;
+  status: 'open' | 'resolved';
+  createdAt: number;
+  updatedAt?: number;
+  messages: SupportMessage[];
+}
+
 export interface Account extends RegisteredUserRecord {
   id: string;
   xenaId: string;
