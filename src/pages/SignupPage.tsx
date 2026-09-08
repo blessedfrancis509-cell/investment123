@@ -42,7 +42,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigateTab, onSignupS
   const inputCls =
     'w-full bg-[#F8F7FC] border border-[#EDE9FE] rounded-xl px-3.5 py-2.5 text-xs font-semibold text-[#171717] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED] focus:bg-white transition-all placeholder:text-[#9CA3AF]';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     if (!name.trim() || !email.trim() || !password.trim()) {

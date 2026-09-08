@@ -1,5 +1,7 @@
 export type ServerState = Record<string, any>;
 
+import type { SupportConversation } from '../types';
+
 export interface RegisterInput {
   name: string;
   email: string;
